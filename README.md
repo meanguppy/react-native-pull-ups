@@ -2,6 +2,8 @@
 
 Native Bottom Sheet Implementations for iOS. Toddler approved. © Android is on it's way.
 
+Built on top of [FittedSheets](https://github.com/gordontucker/FittedSheets) for iOS. Credit for this module goes to this guy!
+
 ## Installation
 
 ```sh
