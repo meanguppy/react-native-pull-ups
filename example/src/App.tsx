@@ -2,12 +2,13 @@ import * as React from 'react';
 import { useState } from 'react';
 
 import { View, Text, ScrollView, SafeAreaView } from 'react-native';
-import PullUp from 'react-native-pull-ups';
+import PullUp, { OnChangeContext } from 'react-native-pull-ups';
 
 export default function App() {
   const [scrollViewIsScrollable, setScrollViewIsScrollable] = useState(false);
 
-  const handleChange = ({ nativeEvent: { isFullScreen } }) => {
+  const handleChange = (evt: OnChangeContext) => {
+    const { isFullScreen } = evt.nativeEvent;
     if (isFullScreen) {
       setScrollViewIsScrollable(true);
     } else if (!isFullScreen) {
@@ -17,12 +18,12 @@ export default function App() {
 
   const renderBackground = () =>
     new Array(100)
-      .fill()
+      .fill('')
       .map((_, i) => <Text key={`bg-${i}`}>Background</Text>);
 
   const renderPullUpContent = () =>
     new Array(20)
-      .fill()
+      .fill('')
       .map((_, i) => <Text key={`content-${i}`}>Content</Text>);
 
   return (

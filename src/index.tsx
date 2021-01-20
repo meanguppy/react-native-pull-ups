@@ -1,9 +1,11 @@
 import React from 'react';
 import { requireNativeComponent } from 'react-native';
 
-type OnChangeContext = {
-  height: number;
-  isFullScreen: boolean;
+export type OnChangeContext = {
+  nativeEvent: {
+    height: number;
+    isFullScreen: boolean;
+  };
 };
 
 type GripSize = {
