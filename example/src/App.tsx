@@ -1,20 +1,21 @@
 import * as React from 'react';
-import { useState } from 'react';
+// import { useState } from 'react';
 
 import { View, Text, ScrollView, SafeAreaView } from 'react-native';
-import PullUp, { OnChangeContext } from 'react-native-pull-ups';
+// import PullUp, { OnChangeContext } from 'react-native-pull-ups';
+import PullUp from 'react-native-pull-ups';
 
 export default function App() {
-  const [scrollViewIsScrollable, setScrollViewIsScrollable] = useState(false);
+  // const [scrollViewIsScrollable, setScrollViewIsScrollable] = useState(true);
 
-  const handleChange = (evt: OnChangeContext) => {
-    const { isFullScreen } = evt.nativeEvent;
-    if (isFullScreen) {
-      setScrollViewIsScrollable(true);
-    } else if (!isFullScreen) {
-      setScrollViewIsScrollable(false);
-    }
-  };
+  // const handleChange = (evt: OnChangeContext) => {
+  //   const { isFullScreen } = evt.nativeEvent;
+  //   if (isFullScreen) {
+  //     setScrollViewIsScrollable(true);
+  //   } else if (!isFullScreen) {
+  //     setScrollViewIsScrollable(false);
+  //   }
+  // };
 
   const renderBackground = () =>
     new Array(100)
@@ -22,17 +23,14 @@ export default function App() {
       .map((_, i) => <Text key={`bg-${i}`}>Background</Text>);
 
   const renderPullUpContent = () =>
-    new Array(20)
+    new Array(100)
       .fill('')
       .map((_, i) => <Text key={`content-${i}`}>Content</Text>);
 
   return (
     <View>
-      <SafeAreaView>
-        <ScrollView>{renderBackground()}</ScrollView>
-      </SafeAreaView>
       <PullUp
-        onSizeChange={handleChange}
+        // onSizeChange={handleChange}
         pullBarHeight={20}
         presentingViewCornerRadius={10}
         useInlineMode={true}
@@ -40,11 +38,10 @@ export default function App() {
         sizes={['30%', '50%', 'fullscreen']}
         shrinkPresentingViewController={false}
         allowGestureThroughOverlay={true}
+        pullUpContent={renderPullUpContent()}
       >
         <SafeAreaView>
-          <ScrollView scrollEnabled={scrollViewIsScrollable}>
-            {renderPullUpContent()}
-          </ScrollView>
+          <ScrollView>{renderBackground()}</ScrollView>
         </SafeAreaView>
       </PullUp>
     </View>

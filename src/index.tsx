@@ -1,19 +1,19 @@
 import React from 'react';
 import { requireNativeComponent } from 'react-native';
 
-export type OnChangeContext = {
+export interface OnChangeContext {
   nativeEvent: {
     height: number;
     isFullScreen: boolean;
   };
-};
+}
 
-type GripSize = {
+interface GripSize {
   width: number;
   height: number;
-};
+}
 
-type PullUpProps = {
+interface PullUpProps {
   sizes: Array<string>;
   children?: React.ReactNode;
   pullBarHeight?: number;
@@ -38,12 +38,21 @@ type PullUpProps = {
   contentBackgroundColor?: string;
   overlayColor?: string;
   allowGestureThroughOverlay?: boolean;
+  pullUpContent: React.ReactNode;
   onSizeChange?: (onChange: OnChangeContext) => void;
+}
+
+export const PullUpsView = requireNativeComponent('RNPullUpView');
+
+const PullUps = (props: PullUpProps) => {
+  const { pullUpContent, children, ...rest } = props;
+  return (
+    <PullUpsView {...rest}>
+      {children}
+      {pullUpContent}
+    </PullUpsView>
+  );
 };
-
-export const PullUpsView = requireNativeComponent<PullUpProps>('RNPullUpView');
-
-const PullUps = (props: PullUpProps) => <PullUpsView {...props} />;
 
 PullUps.defaultProps = {
   show: true,
