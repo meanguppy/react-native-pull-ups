@@ -14,8 +14,7 @@
     android:id="@+id/bottomSheet"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:behavior_hideable="false"
-    app:behavior_peekHeight="72dp"
+    app:behavior_hideable="true"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
