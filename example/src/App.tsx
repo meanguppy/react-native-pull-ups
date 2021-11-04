@@ -24,7 +24,7 @@ export default function App() {
       .map((_, i) => <Text key={`bg-${i}`}>Background {i}</Text>);
 
   const renderPullUpContent = () =>
-    new Array(100)
+    new Array(10)
       .fill('')
       .map((_, i) => <Text key={`content-${i}`}>Content {i}</Text>);
 
@@ -39,6 +39,7 @@ export default function App() {
 
   return (
     <PullUp
+      style={{ flex: 1 }}
       sheetState={bottomSheetState}
       onSheetStateChanged={onSheetChanged}
       hideable={true}
@@ -52,11 +53,8 @@ export default function App() {
         <Button onPress={onPress} title="Toggle" />
         {renderBackground()}
       </ScrollView>
-      <View style={{ flex: 1, backgroundColor: '#aaa' }}>
-        <Text>Testing</Text>
-        <ScrollView style={{ height: '100%' }}>
-          {renderPullUpContent()}
-        </ScrollView>
+      <View style={{ backgroundColor: 'red' }}>
+        {renderPullUpContent()}
       </View>
     </PullUp>
   );

@@ -3,6 +3,7 @@ package com.reactnativepullups
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.RelativeLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.bridge.*
 import com.facebook.react.common.MapBuilder
@@ -17,28 +18,16 @@ private const val STATE_CHANGE_EVENT_NAME = "BottomSheetStateChange"
 class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   override fun getName() = "RNPullUpView"
-  private lateinit var container: CoordinatorLayout
+  private lateinit var container: RelativeLayout
   private lateinit var bottomSheet: CoordinatorLayout
   private lateinit var bottomSheetBehavior: BottomSheetBehavior<CoordinatorLayout>
+  private var state: BottomSheetState = BottomSheetState.COLLAPSED
 
   enum class BottomSheetState {
     COLLAPSED,
     HIDDEN,
     EXPANDED;
-
     fun toLowerCase() = this.toString().toLowerCase()
-  }
-  private var state: BottomSheetState = BottomSheetState.COLLAPSED
-
-  override fun getExportedCustomBubblingEventTypeConstants(): MutableMap<String, Any> {
-    return MapBuilder
-      .builder<String, Any>()
-      .put(
-        "stateChanged",
-        MapBuilder.of(
-          "phasedRegistrationNames",
-          MapBuilder.of("bubbled", "onSizeChange")))
-      .build();
   }
 
   override fun createViewInstance(reactContext: ThemedReactContext): CoordinatorLayout {
@@ -49,7 +38,6 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
     container = view.findViewById(R.id.container)
     bottomSheet = view.findViewById(R.id.bottomSheet)
-
     bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet).apply {
 
       addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
@@ -70,6 +58,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
         }
       })
     }
+
     return view
   }
 
@@ -77,13 +66,13 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     // When Quick Reload is triggered during RN development it does not tear down native views.
     // This means we need to remove any existing children when a new child is passed, otherwise
     // they can add to the same root infinitely.
-   if (container.childCount + bottomSheet.childCount > 1) {
-       container.removeAllViews()
-       bottomSheet.removeAllViews()
+    if (container.childCount + bottomSheet.childCount > 1) {
+      container.removeAllViews()
+      bottomSheet.removeAllViews()
     }
     when (container.childCount) {
-        0 -> container.addView(child)
-        else -> bottomSheet.addView(child)
+      0 -> container.addView(child)
+      else -> bottomSheet.addView(child)
     }
   }
 
@@ -119,16 +108,16 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   @ReactProp(name = "sheetState")
   fun setSheetState(parent: CoordinatorLayout, newState: String?) {
-      newState?.toLowerCase()?.let {
-          if (it === state.toString().toLowerCase()) {
-              return
-          }
-          bottomSheetBehavior.state = when (it) {
-              BottomSheetState.EXPANDED.toLowerCase() -> BottomSheetBehavior.STATE_EXPANDED
-              BottomSheetState.COLLAPSED.toLowerCase() -> BottomSheetBehavior.STATE_COLLAPSED
-              else -> BottomSheetBehavior.STATE_HIDDEN
-          }
+    newState?.toLowerCase()?.let {
+      if (it === state.toString().toLowerCase()) {
+        return
       }
+      bottomSheetBehavior.state = when (it) {
+        BottomSheetState.EXPANDED.toLowerCase() -> BottomSheetBehavior.STATE_EXPANDED
+        BottomSheetState.COLLAPSED.toLowerCase() -> BottomSheetBehavior.STATE_COLLAPSED
+        else -> BottomSheetBehavior.STATE_HIDDEN
+      }
+    }
   }
 
 }
