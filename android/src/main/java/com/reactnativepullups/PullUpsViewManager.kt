@@ -57,6 +57,8 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
           }
         }
       })
+      setHalfExpandedRatio(0.999999f) //TODO: possibly expose this through a different prop
+      setFitToContents(true)
     }
 
     return view
@@ -78,35 +80,37 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   @ReactProp(name = "hideable")
   fun setHideable(parent: CoordinatorLayout, hideable: Boolean){
-    behavior.setHideable(hideable);
+    behavior.setHideable(hideable)
   }
 
   @ReactProp(name = "collapsible")
   fun setCollapsible(parent: CoordinatorLayout, collapsible: Boolean){
-    behavior.setSkipCollapsed(!collapsible);
+    behavior.setSkipCollapsed(!collapsible)
   }
 
   @ReactProp(name = "expandedOffset")
   fun setExpandedOffset(parent: CoordinatorLayout, offset: Int){
-    behavior.setExpandedOffset(offset);
-  }
-
-  @ReactProp(name = "halfExpandedRatio")
-  fun setHalfExpandedRatio(parent: CoordinatorLayout, ratio: Float){
-    behavior.setHalfExpandedRatio(ratio);
-  }
-
-  @ReactProp(name = "fitToContents")
-  fun setFitToContents(parent: CoordinatorLayout, fitToContents: Boolean){
-    behavior.setFitToContents(fitToContents);
+    behavior.setExpandedOffset(offset)
   }
 
   @ReactProp(name = "peekHeight")
   fun setPeekHeight(parent: CoordinatorLayout, height: Int){
-    behavior.setPeekHeight(height);
+    behavior.setPeekHeight(height)
   }
 
-  @ReactProp(name = "sheetState")
+  //TODO
+  @ReactProp(name = "dialog")
+  fun setDialog(parent: CoordinatorLayout, useDialog: Boolean){
+    var children = parent.childCount
+    if(useDialog && children > 1){
+      parent.removeView(bottomSheet)
+    }
+    if(!useDialog && children == 1){
+      parent.addView(bottomSheet, 1)
+    }
+  }
+
+  @ReactProp(name = "state")
   fun setSheetState(parent: CoordinatorLayout, newState: String?) {
     newState?.toLowerCase()?.let {
       if (it === state.toString().toLowerCase()) {

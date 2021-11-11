@@ -17,6 +17,7 @@ export default function App() {
   const [bottomSheetState, setBottomSheetState] = useState<BottomSheetState>(
     'collapsed'
   );
+  const [useDialog, setUseDialog] = useState<Boolean>(false);
 
   const renderBackground = () =>
     new Array(100)
@@ -40,20 +41,20 @@ export default function App() {
   return (
     <PullUp
       style={{ flex: 1 }}
-      sheetState={bottomSheetState}
+      dialog={useDialog}
+      state={bottomSheetState}
       onSheetStateChanged={onSheetChanged}
       hideable={true}
       collapsible={true}
       //expandedOffset={240}
-      //fitToContents={false}
-      //halfExpandedRatio={0.8}
-      peekHeight={360}
+      peekHeight={200}
     >
       <ScrollView>
         <Button onPress={onPress} title="Toggle" />
+        <Button onPress={() => setUseDialog(!useDialog)} title="Toggle dialog" />
         {renderBackground()}
       </ScrollView>
-      <View style={{ backgroundColor: 'red' }}>
+      <View style={{ paddingVertical: 32, paddingHorizontal: 16, backgroundColor: 'red' }}>
         {renderPullUpContent()}
       </View>
     </PullUp>
