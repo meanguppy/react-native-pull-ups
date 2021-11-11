@@ -11,7 +11,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-class CustomCoordinatorLayout : CoordinatorLayout {
+class DialogShrinkingLayout : CoordinatorLayout {
 
   constructor(context: Context) : super(context)
   constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
@@ -19,10 +19,27 @@ class CustomCoordinatorLayout : CoordinatorLayout {
   
   /* Sets the height of the layout to that of its first child's */
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    //super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     this.getChildAt(0)?.let {
+      Log.d("PULLUPS", "Using height:" + it.height)
       setMeasuredDimension(widthMeasureSpec, it.height)
     }
+  }
+
+  private var measureAndLayout = Runnable {
+    measure(
+      MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
+      MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY)
+    )
+    layout(getLeft(), getTop(), getRight(), getBottom())
+  }
+
+  override fun onLayout(changed: Boolean, t: Int, l: Int, r: Int, b: Int){
+  }
+
+  override fun requestLayout(){
+    super.requestLayout()
+    post(measureAndLayout)
   }
 
 }

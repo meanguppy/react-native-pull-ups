@@ -30,6 +30,7 @@ export default function App() {
       .map((_, i) => <Text key={`content-${i}`}>Content {i}</Text>);
 
   const onSheetChanged = useCallback((newState: BottomSheetState) => {
+    console.log(newState);
     setBottomSheetState(newState);
   }, []);
 
