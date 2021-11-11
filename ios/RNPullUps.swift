@@ -20,7 +20,7 @@ class PullUpView : UIView {
     var pullBarHeight: CGFloat = 24
     var presentingViewCornerRadius: CGFloat = 20
     var shouldExtendBackground: Bool = true
-    var setIntrensicHeightOnNavigationControllers: Bool = false
+    var setIntrinsicHeightOnNavigationControllers: Bool = false
     var useFullScreenMode: Bool = false
     var shrinkPresentingViewController: Bool = false
     var useInlineMode: Bool = true
@@ -76,10 +76,10 @@ class PullUpView : UIView {
             presentingViewCornerRadius: self.presentingViewCornerRadius,
             // Extends the background behind the pull bar or not
             shouldExtendBackground: self.shouldExtendBackground,
-            // Attempts to use intrensic heights on navigation controllers.
+            // Attempts to use intrinsic heights on navigation controllers.
             // This does not work well in combination with
             // keyboards without your code handling it.
-            setIntrensicHeightOnNavigationControllers: self.setIntrensicHeightOnNavigationControllers,
+            setIntrinsicHeightOnNavigationControllers: self.setIntrinsicHeightOnNavigationControllers,
             // Pulls the view controller behind the safe area top,
             // especially useful when embedding navigation controllers
             useFullScreenMode: self.useFullScreenMode,
@@ -189,8 +189,8 @@ class PullUpView : UIView {
         self.shouldExtendBackground = shouldExtendBackground
     }
     
-    @objc func setSetIntrensicHeightOnNavigationControllers (_ setIntrensicHeightOnNavigationControllers: Bool) {
-        self.setIntrensicHeightOnNavigationControllers = setIntrensicHeightOnNavigationControllers
+    @objc func setSetIntrinsicHeightOnNavigationControllers (_ setIntrinsicHeightOnNavigationControllers: Bool) {
+        self.setIntrinsicHeightOnNavigationControllers = setIntrinsicHeightOnNavigationControllers
     }
     
     @objc func setUseFullScreenMode (_ useFullScreenMode: Bool) {
