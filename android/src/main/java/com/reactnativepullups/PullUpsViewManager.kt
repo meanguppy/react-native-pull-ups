@@ -57,6 +57,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
         updateState(BottomSheetState.HIDDEN)
       }
     })
+
     behavior = dialog.behavior.apply {
       addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
         override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
@@ -91,16 +92,16 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   fun setDialogMode(parent: CoordinatorLayout, enabled: Boolean){
     if(dialogMode == enabled) return
 
-    detachSelf(content)
     if(enabled){
+      parent.removeView(content)
       contentUsesBehavior(false)
       dialog.setContentView(content)
       if(state != BottomSheetState.HIDDEN){
         dialog.show()
       }
     } else {
-      contentUsesBehavior(true)
-      parent.addView(content)
+      // this use-case is questionable.. implementing is tedious
+      throw IllegalStateException("Cannot switch to inline mode after using dialog mode")
     }
 
     dialogMode = enabled
@@ -129,10 +130,8 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   @ReactProp(name = "state")
   fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
     if(stateStr != null) matchState(stateStr)?.let {
-
       var needsNativeUpdate = (behavior.state != it.nativeState)
       var allowNativeUpdate = (!dialogMode || it != BottomSheetState.HIDDEN)
-
       if(needsNativeUpdate && allowNativeUpdate){
         behavior.state = it.nativeState
       }
@@ -140,14 +139,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     }
   }
 
-  private fun detachSelf(view: View?){
-    (view?.parent as ViewGroup?)?.let {
-      it.removeView(view)
-    }
-  }
-
   private fun contentUsesBehavior(enabled: Boolean){
-    //TODO: need to be able to convert it back again..
     (content.layoutParams as CoordinatorLayout.LayoutParams).let {
       it.behavior = if(enabled) behavior else null
     }
