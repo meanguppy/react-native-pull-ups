@@ -117,17 +117,19 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
     if(stateStr != null) matchState(stateStr)?.let {
       var presenting = (state == BottomSheetState.HIDDEN && it != BottomSheetState.HIDDEN)
-      updateState(it)
 
       var needsNativeUpdate = (behavior.state != it.nativeState)
       var allowNativeUpdate = (!dialogMode || it != BottomSheetState.HIDDEN)
       if(needsNativeUpdate && allowNativeUpdate){
+        //Log.d("PULLUPS", "NativeState: " + it.str)
         behavior.state = it.nativeState
       }
       if(dialogMode && presenting){
+        //Log.d("PULLUPS", "PRESENT DIALOG")
         dialog.show()
       }
 
+      updateState(it)
     }
   }
 
@@ -154,6 +156,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     newState?.let {
       if(state == newState) return
       state = newState
+      //Log.d("PULLUPS", "InternalState: " + state.str)
       context
         .getJSModule(RCTDeviceEventEmitter::class.java)
         .emit(STATE_CHANGE_EVENT_NAME, state.str)
