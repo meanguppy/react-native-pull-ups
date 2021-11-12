@@ -116,6 +116,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   @ReactProp(name = "state")
   fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
     if(stateStr != null) matchState(stateStr)?.let {
+      var presenting = (state == BottomSheetState.HIDDEN && it != BottomSheetState.HIDDEN)
       updateState(it)
 
       var needsNativeUpdate = (behavior.state != it.nativeState)
@@ -123,6 +124,10 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
       if(needsNativeUpdate && allowNativeUpdate){
         behavior.state = it.nativeState
       }
+      if(dialogMode && presenting){
+        dialog.show()
+      }
+
     }
   }
 
@@ -148,11 +153,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   private fun updateState(newState: BottomSheetState?){
     newState?.let {
       if(state == newState) return
-
-      var wasHidden = (state == BottomSheetState.HIDDEN)
       state = newState
-      if(dialogMode && wasHidden) dialog.show()
-      
       context
         .getJSModule(RCTDeviceEventEmitter::class.java)
         .emit(STATE_CHANGE_EVENT_NAME, state.str)
@@ -165,11 +166,6 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
       container.addView(child)
     } else {
       content.addView(child)
-      child?.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
-        override fun onLayoutChange(v: View?, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int){
-          content.requestLayout()
-        }
-      })
     } 
   }
 
@@ -194,5 +190,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   override fun getChildCount(parent: CoordinatorLayout)
     = container.childCount + content.childCount
+
+  override fun needsCustomLayoutForChildren() = true
 
 }

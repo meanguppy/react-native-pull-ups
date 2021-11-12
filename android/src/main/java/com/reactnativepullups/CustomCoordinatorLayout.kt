@@ -27,7 +27,7 @@ class CustomCoordinatorLayout : CoordinatorLayout {
       if(child == null)
         heightMeasureSpec
       else 
-        MeasureSpec.makeMeasureSpec(child.height, MeasureSpec.EXACTLY)
+        MeasureSpec.makeMeasureSpec(child.measuredHeight, MeasureSpec.EXACTLY)
     )
   }
 
