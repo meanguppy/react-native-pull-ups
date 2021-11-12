@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, NativeEventEmitter, requireNativeComponent } from 'react-native';
 
 export type BottomSheetState = 'hidden' | 'collapsed' | 'expanded';
 
 interface PullUpProps {
   onSheetStateChanged?: (newState: BottomSheetState) => void;
+  renderContent: () => object;
   hideable?: boolean;
   collapsible?: boolean;
   fitToContents?: boolean;
@@ -13,6 +14,7 @@ interface PullUpProps {
   peekHeight?: number;
   sheetState?: BottomSheetState;
   style?: object;
+  contentStyle?: object;
   children?: object;
 }
 
@@ -37,15 +39,10 @@ const PullUps = (props: PullUpProps) => {
     return () => subscription.remove();
   }, [onSheetStateChanged]);
 
-  const onLayout = useCallback((evt) => {
-    console.log(evt.nativeEvent.layout.height)
-    console.log(this.refs)
-  })
-
   return (
     <PullUpsView {...rest} style={[ styles.primary, props.style ]}>
       { children }
-      <View style={[ styles.sheet, props.contentStyle ]} onLayout={onLayout}>{ renderContent() }</View>
+      <View style={[ styles.sheet, props.contentStyle ]}>{ renderContent() }</View>
     </PullUpsView>
   );
 };
