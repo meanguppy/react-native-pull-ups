@@ -74,20 +74,6 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     return view
   }
 
-  override fun addView(parent: CoordinatorLayout?, child: View?, index: Int) {
-    // When Quick Reload is triggered during RN development it does not tear down native views.
-    // This means we need to remove any existing children when a new child is passed, otherwise
-    // they can add to the same root infinitely.
-    if (container.childCount + content.childCount > 1) {
-      container.removeAllViews()
-      content.removeAllViews()
-    }
-    when (container.childCount) {
-      0 -> container.addView(child)
-      1 -> content.addView(child)
-    }
-  }
-
   @ReactProp(name = "dialog")
   fun setDialogMode(parent: CoordinatorLayout, enabled: Boolean){
     if(dialogMode == enabled) return
@@ -171,5 +157,35 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
         .emit(STATE_CHANGE_EVENT_NAME, state.str)
     }
   }
+
+  /* Override ViewGroupManager funcs to handle child views properly */
+  override fun addView(parent: CoordinatorLayout?, child: View?, index: Int) {
+    when (container.childCount) {
+      0 -> container.addView(child)
+      1 -> content.addView(child)
+    }
+  }
+
+  override fun removeAllViews(parent: CoordinatorLayout){
+    container.removeAllViews()
+    content.removeAllViews()
+  }
+
+  override fun removeViewAt(parent: CoordinatorLayout, index: Int)
+    = if(index == 0){
+      container.removeAllViews()
+    } else {
+      content.removeViewAt(index - 1)
+    }
+
+  override fun getChildAt(parent: CoordinatorLayout, index: Int)
+    = if(index == 0){
+      container.getChildAt(0)
+    } else {
+      content.getChildAt(index - 1)
+    }
+
+  override fun getChildCount(parent: CoordinatorLayout)
+    = container.childCount + content.childCount
 
 }
