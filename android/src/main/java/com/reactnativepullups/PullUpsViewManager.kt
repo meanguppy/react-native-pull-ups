@@ -116,12 +116,13 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   @ReactProp(name = "state")
   fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
     if(stateStr != null) matchState(stateStr)?.let {
+      updateState(it)
+
       var needsNativeUpdate = (behavior.state != it.nativeState)
       var allowNativeUpdate = (!dialogMode || it != BottomSheetState.HIDDEN)
       if(needsNativeUpdate && allowNativeUpdate){
         behavior.state = it.nativeState
       }
-      updateState(it)
     }
   }
 
@@ -160,10 +161,16 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   /* Override ViewGroupManager funcs to handle child views properly */
   override fun addView(parent: CoordinatorLayout?, child: View?, index: Int) {
-    when (container.childCount) {
-      0 -> container.addView(child)
-      1 -> content.addView(child)
-    }
+    if(index == 0){
+      container.addView(child)
+    } else {
+      content.addView(child)
+      child?.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+        override fun onLayoutChange(v: View?, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int){
+          content.requestLayout()
+        }
+      })
+    } 
   }
 
   override fun removeAllViews(parent: CoordinatorLayout){

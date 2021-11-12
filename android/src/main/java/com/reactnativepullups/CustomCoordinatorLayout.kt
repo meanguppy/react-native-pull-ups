@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.RelativeLayout
+import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -17,16 +18,17 @@ class CustomCoordinatorLayout : CoordinatorLayout {
   constructor(context: Context) : super(context)
   constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
   constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
-
-  private var firstMeasured: Int = -1
   
   /* Sets the height of the layout to that of its first child's */
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-    this.getChildAt(0)?.let {
-      if(firstMeasured == -1) firstMeasured = it.height
-      setMeasuredDimension(widthMeasureSpec, firstMeasured)
-    }
+    var child = getChildAt(0)
+    super.onMeasure(
+      widthMeasureSpec,
+      if(child == null)
+        heightMeasureSpec
+      else 
+        MeasureSpec.makeMeasureSpec(child.height, MeasureSpec.EXACTLY)
+    )
   }
 
 }

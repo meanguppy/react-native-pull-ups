@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { NativeEventEmitter, requireNativeComponent } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { View, StyleSheet, NativeEventEmitter, requireNativeComponent } from 'react-native';
 
 export type BottomSheetState = 'hidden' | 'collapsed' | 'expanded';
 
@@ -16,10 +16,15 @@ interface PullUpProps {
   children?: object;
 }
 
+const styles = StyleSheet.create({
+  primary: { flex: 1 },
+  sheet: { backgroundColor: 'white' },
+});
+
 export const PullUpsView = requireNativeComponent('RNPullUpView');
 
 const PullUps = (props: PullUpProps) => {
-  const { onSheetStateChanged } = props;
+  const { children, renderContent, contentStyle, onSheetStateChanged, ...rest } = props;
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
@@ -32,7 +37,17 @@ const PullUps = (props: PullUpProps) => {
     return () => subscription.remove();
   }, [onSheetStateChanged]);
 
-  return <PullUpsView {...props} />;
+  const onLayout = useCallback((evt) => {
+    console.log(evt.nativeEvent.layout.height)
+    console.log(this.refs)
+  })
+
+  return (
+    <PullUpsView {...rest} style={[ styles.primary, props.style ]}>
+      { children }
+      <View style={[ styles.sheet, props.contentStyle ]} onLayout={onLayout}>{ renderContent() }</View>
+    </PullUpsView>
+  );
 };
 
 export default PullUps;
