@@ -46,7 +46,7 @@ export default function App() {
       state={bottomSheetState}
       onSheetStateChanged={onSheetChanged}
       hideable={true}
-      collapsible={true}
+      collapsible={false}
       //expandedOffset={240}
       peekHeight={200}
     >

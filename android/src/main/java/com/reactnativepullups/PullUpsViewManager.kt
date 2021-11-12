@@ -16,6 +16,7 @@ import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.slider.LabelFormatter
 
 private const val STATE_CHANGE_EVENT_NAME = "BottomSheetStateChange"
 
@@ -26,13 +27,9 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   private lateinit var context: ThemedReactContext
 
   private lateinit var container: RelativeLayout
-  private lateinit var bottomSheet: InlineShrinkingLayout
-  private lateinit var dialogContent: DialogShrinkingLayout
-  private var content: View? = null
-
+  private lateinit var content: CustomCoordinatorLayout
   private lateinit var dialog: BottomSheetDialog
-  private lateinit var behavior1: BottomSheetBehavior<*>
-  private lateinit var behavior2: BottomSheetBehavior<*>
+  private lateinit var behavior: BottomSheetBehavior<*>
 
   private var dialogMode: Boolean = false
   private var state: BottomSheetState = BottomSheetState.COLLAPSED
@@ -45,13 +42,14 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   override fun createViewInstance(reactContext: ThemedReactContext): CoordinatorLayout {
     context = reactContext
+
     var view = LayoutInflater.from(reactContext).inflate(
       R.layout.bottom_sheet,
       null
     ) as CoordinatorLayout
 
     container = view.findViewById(R.id.container)
-    bottomSheet = view.findViewById(R.id.bottomSheet)
+    content = view.findViewById(R.id.content)
 
     dialog = BottomSheetDialog(reactContext)
     dialog.setOnCancelListener(object : DialogInterface.OnCancelListener {
@@ -59,13 +57,18 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
         updateState(BottomSheetState.HIDDEN)
       }
     })
-    dialogContent = DialogShrinkingLayout(context);
-    dialog.setContentView(dialogContent)
+    behavior = dialog.behavior.apply {
+      addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+          updateState(matchState(newState))
+        }
+      })
+      setHalfExpandedRatio(0.999999f) //TODO: possibly expose this through a different prop
+      setFitToContents(true)
+    }
 
-    behavior1 = BottomSheetBehavior.from(bottomSheet)
-    behavior2 = dialog.behavior
-    initBehavior(behavior1)
-    initBehavior(behavior2)
+    contentUsesBehavior(true)
 
     return view
   }
@@ -74,16 +77,13 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     // When Quick Reload is triggered during RN development it does not tear down native views.
     // This means we need to remove any existing children when a new child is passed, otherwise
     // they can add to the same root infinitely.
-    if (container.childCount + bottomSheet.childCount > 1) {
+    if (container.childCount + content.childCount > 1) {
       container.removeAllViews()
-      bottomSheet.removeAllViews()
+      content.removeAllViews()
     }
     when (container.childCount) {
       0 -> container.addView(child)
-      1 -> {
-        content = child
-        bottomSheet.addView(child)
-      }
+      1 -> content.addView(child)
     }
   }
 
@@ -91,15 +91,16 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   fun setDialogMode(parent: CoordinatorLayout, enabled: Boolean){
     if(dialogMode == enabled) return
 
-    detachSelf(bottomSheet)
+    detachSelf(content)
     if(enabled){
+      contentUsesBehavior(false)
+      dialog.setContentView(content)
       if(state != BottomSheetState.HIDDEN){
-        presentDialog()
+        dialog.show()
       }
     } else {
-      detachSelf(content)
-      bottomSheet.addView(content)
-      parent.addView(bottomSheet, 1)
+      contentUsesBehavior(true)
+      parent.addView(content)
     }
 
     dialogMode = enabled
@@ -107,40 +108,36 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   @ReactProp(name = "hideable")
   fun setHideable(parent: CoordinatorLayout, hideable: Boolean){
-    behavior1.setHideable(hideable)
-    behavior2.setHideable(hideable)
+    behavior.setHideable(hideable)
   }
 
   @ReactProp(name = "collapsible")
   fun setCollapsible(parent: CoordinatorLayout, collapsible: Boolean){
-    behavior1.setSkipCollapsed(!collapsible)
-    behavior2.setSkipCollapsed(!collapsible)
+    behavior.setSkipCollapsed(!collapsible)
   }
 
   @ReactProp(name = "expandedOffset")
   fun setExpandedOffset(parent: CoordinatorLayout, offset: Int){
-    behavior1.setExpandedOffset(offset)
-    behavior2.setExpandedOffset(offset)
+    behavior.setExpandedOffset(offset)
   }
 
   @ReactProp(name = "peekHeight")
   fun setPeekHeight(parent: CoordinatorLayout, height: Int){
-    behavior1.setPeekHeight(height)
-    behavior2.setPeekHeight(height)
+    behavior.setPeekHeight(height)
   }
 
   @ReactProp(name = "state")
-  fun setSheetState(parent: CoordinatorLayout, newState: String?) {
-    newState?.let {
-      updateState(matchState(it))
-    }
-  }
+  fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
+    if(stateStr != null) matchState(stateStr)?.let {
 
-  private fun presentDialog(){
-    detachSelf(content)
-    dialogContent.addView(content)
-    dialog.setContentView(dialogContent)
-    dialog.show()
+      var needsNativeUpdate = (behavior.state != it.nativeState)
+      var allowNativeUpdate = (!dialogMode || it != BottomSheetState.HIDDEN)
+
+      if(needsNativeUpdate && allowNativeUpdate){
+        behavior.state = it.nativeState
+      }
+      updateState(it)
+    }
   }
 
   private fun detachSelf(view: View?){
@@ -149,15 +146,11 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     }
   }
 
-  private fun initBehavior(target: BottomSheetBehavior<*>){
-    target.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-      override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
-      override fun onStateChanged(bottomSheet: View, newState: Int) {
-        updateState(matchState(newState))
-      }
-    })
-    target.setHalfExpandedRatio(0.999999f) //TODO: possibly expose this through a different prop
-    target.setFitToContents(true)
+  private fun contentUsesBehavior(enabled: Boolean){
+    //TODO: need to be able to convert it back again..
+    (content.layoutParams as CoordinatorLayout.LayoutParams).let {
+      it.behavior = if(enabled) behavior else null
+    }
   }
 
   private fun matchState(sheetState: Int) = when (sheetState) {
@@ -176,19 +169,11 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   private fun updateState(newState: BottomSheetState?){
     newState?.let {
       if(state == newState) return
+
       var wasHidden = (state == BottomSheetState.HIDDEN)
-
       state = newState
-      behavior1.state = newState.nativeState
-
-      // never set dialog's behavior to HIDDEN, makes it buggy. Instead, dismiss dialog
-      if(state != BottomSheetState.HIDDEN){
-        behavior2.state = newState.nativeState
-      }
-      if(dialogMode && wasHidden){
-        presentDialog()
-      }
-
+      if(dialogMode && wasHidden) dialog.show()
+      
       context
         .getJSModule(RCTDeviceEventEmitter::class.java)
         .emit(STATE_CHANGE_EVENT_NAME, state.str)

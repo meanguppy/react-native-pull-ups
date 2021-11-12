@@ -3,6 +3,7 @@ package com.reactnativepullups
 import android.util.Log
 import android.util.AttributeSet
 import android.content.Context
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
@@ -11,35 +12,21 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-class DialogShrinkingLayout : CoordinatorLayout {
+class CustomCoordinatorLayout : CoordinatorLayout {
 
   constructor(context: Context) : super(context)
   constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
   constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+
+  private var firstMeasured: Int = -1
   
   /* Sets the height of the layout to that of its first child's */
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    //super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     this.getChildAt(0)?.let {
-      Log.d("PULLUPS", "Using height:" + it.height)
-      setMeasuredDimension(widthMeasureSpec, it.height)
+      if(firstMeasured == -1) firstMeasured = it.height
+      setMeasuredDimension(widthMeasureSpec, firstMeasured)
     }
-  }
-
-  private var measureAndLayout = Runnable {
-    measure(
-      MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
-      MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY)
-    )
-    layout(getLeft(), getTop(), getRight(), getBottom())
-  }
-
-  override fun onLayout(changed: Boolean, t: Int, l: Int, r: Int, b: Int){
-  }
-
-  override fun requestLayout(){
-    super.requestLayout()
-    post(measureAndLayout)
   }
 
 }

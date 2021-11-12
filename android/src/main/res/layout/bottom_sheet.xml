@@ -9,11 +9,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"/>
 
-  <com.reactnativepullups.InlineShrinkingLayout
-    android:id="@+id/bottomSheet"
+  <com.reactnativepullups.CustomCoordinatorLayout
+    android:id="@+id/content"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    app:behavior_hideable="true"
-    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"/>
+    android:layout_height="match_parent"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
