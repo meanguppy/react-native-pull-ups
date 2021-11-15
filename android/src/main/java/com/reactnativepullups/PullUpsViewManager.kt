@@ -14,186 +14,20 @@ import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEm
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.views.modal.ReactModalHostView
+import com.facebook.react.views.modal.ReactModalHostManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.slider.LabelFormatter
 
-private const val STATE_CHANGE_EVENT_NAME = "BottomSheetStateChange"
 
-class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
+class PullUpsViewManager : ReactModalHostManager() {
 
   override fun getName() = "RNPullUpView"
 
-  private lateinit var context: ThemedReactContext
-
-  private lateinit var container: RelativeLayout
-  private lateinit var content: CustomCoordinatorLayout
-  private lateinit var dialog: BottomSheetDialog
-  private lateinit var behavior: BottomSheetBehavior<*>
-
-  private var dialogMode: Boolean = false
-  private var state: BottomSheetState = BottomSheetState.COLLAPSED
-
-  enum class BottomSheetState(val str: String, val nativeState: Int){
-    EXPANDED("expanded", BottomSheetBehavior.STATE_EXPANDED),
-    COLLAPSED("collapsed", BottomSheetBehavior.STATE_COLLAPSED),
-    HIDDEN("hidden", BottomSheetBehavior.STATE_HIDDEN);
+  override fun createViewInstance(reactContext: ThemedReactContext): ReactModalHostView {
+    Log.d("PULLUPS", "Creating view")
+    return PullUpsModalView(reactContext)
   }
-
-  override fun createViewInstance(reactContext: ThemedReactContext): CoordinatorLayout {
-    context = reactContext
-
-    var view = LayoutInflater.from(reactContext).inflate(
-      R.layout.bottom_sheet,
-      null
-    ) as CoordinatorLayout
-
-    container = view.findViewById(R.id.container)
-    content = view.findViewById(R.id.content)
-
-    dialog = BottomSheetDialog(reactContext)
-    dialog.setOnCancelListener(object : DialogInterface.OnCancelListener {
-      override fun onCancel(info: DialogInterface){
-        updateState(BottomSheetState.HIDDEN)
-      }
-    })
-
-    behavior = dialog.behavior.apply {
-      addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
-        override fun onStateChanged(bottomSheet: View, newState: Int) {
-          updateState(matchState(newState))
-        }
-      })
-      setHalfExpandedRatio(0.999999f) //TODO: possibly expose this through a different prop
-      setFitToContents(true)
-    }
-
-    contentUsesBehavior(true)
-
-    return view
-  }
-
-  @ReactProp(name = "dialog")
-  fun setDialogMode(parent: CoordinatorLayout, enabled: Boolean){
-    if(dialogMode == enabled) return
-
-    if(enabled){
-      parent.removeView(content)
-      contentUsesBehavior(false)
-      dialog.setContentView(content)
-      if(state != BottomSheetState.HIDDEN){
-        dialog.show()
-      }
-    } else {
-      // this use-case is questionable.. implementing is tedious
-      throw IllegalStateException("Cannot switch to inline mode after using dialog mode")
-    }
-
-    dialogMode = enabled
-  }
-
-  @ReactProp(name = "hideable")
-  fun setHideable(parent: CoordinatorLayout, hideable: Boolean){
-    behavior.setHideable(hideable)
-  }
-
-  @ReactProp(name = "collapsible")
-  fun setCollapsible(parent: CoordinatorLayout, collapsible: Boolean){
-    behavior.setSkipCollapsed(!collapsible)
-  }
-
-  @ReactProp(name = "expandedOffset")
-  fun setExpandedOffset(parent: CoordinatorLayout, offset: Int){
-    behavior.setExpandedOffset(offset)
-  }
-
-  @ReactProp(name = "peekHeight")
-  fun setPeekHeight(parent: CoordinatorLayout, height: Int){
-    behavior.setPeekHeight(height)
-  }
-
-  @ReactProp(name = "state")
-  fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
-    if(stateStr != null) matchState(stateStr)?.let {
-      var presenting = (state == BottomSheetState.HIDDEN && it != BottomSheetState.HIDDEN)
-
-      var needsNativeUpdate = (behavior.state != it.nativeState)
-      var allowNativeUpdate = (!dialogMode || it != BottomSheetState.HIDDEN)
-      if(needsNativeUpdate && allowNativeUpdate){
-        //Log.d("PULLUPS", "NativeState: " + it.str)
-        behavior.state = it.nativeState
-      }
-      if(dialogMode && presenting){
-        //Log.d("PULLUPS", "PRESENT DIALOG")
-        dialog.show()
-      }
-
-      updateState(it)
-    }
-  }
-
-  private fun contentUsesBehavior(enabled: Boolean){
-    (content.layoutParams as CoordinatorLayout.LayoutParams).let {
-      it.behavior = if(enabled) behavior else null
-    }
-  }
-
-  private fun matchState(sheetState: Int) = when (sheetState) {
-    BottomSheetBehavior.STATE_EXPANDED -> BottomSheetState.EXPANDED
-    BottomSheetBehavior.STATE_COLLAPSED -> BottomSheetState.COLLAPSED
-    BottomSheetBehavior.STATE_HIDDEN -> BottomSheetState.HIDDEN
-    else -> null
-  }
-
-  private fun matchState(sheetState: String) = try {
-    BottomSheetState.valueOf(sheetState.toUpperCase())
-  } catch(e: IllegalArgumentException){
-    null
-  }
-
-  private fun updateState(newState: BottomSheetState?){
-    newState?.let {
-      if(state == newState) return
-      state = newState
-      //Log.d("PULLUPS", "InternalState: " + state.str)
-      context
-        .getJSModule(RCTDeviceEventEmitter::class.java)
-        .emit(STATE_CHANGE_EVENT_NAME, state.str)
-    }
-  }
-
-  /* Override ViewGroupManager funcs to handle child views properly */
-  override fun addView(parent: CoordinatorLayout?, child: View?, index: Int) {
-    if(index == 0){
-      container.addView(child)
-    } else {
-      content.addView(child)
-    } 
-  }
-
-  override fun removeAllViews(parent: CoordinatorLayout){
-    container.removeAllViews()
-    content.removeAllViews()
-  }
-
-  override fun removeViewAt(parent: CoordinatorLayout, index: Int)
-    = if(index == 0){
-      container.removeAllViews()
-    } else {
-      content.removeViewAt(index - 1)
-    }
-
-  override fun getChildAt(parent: CoordinatorLayout, index: Int)
-    = if(index == 0){
-      container.getChildAt(0)
-    } else {
-      content.getChildAt(index - 1)
-    }
-
-  override fun getChildCount(parent: CoordinatorLayout)
-    = container.childCount + content.childCount
-
-  override fun needsCustomLayoutForChildren() = true
 
 }
