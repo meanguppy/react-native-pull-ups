@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, Modal, StyleSheet, requireNativeComponent } from 'react-native';
+import { View, Modal, StyleSheet, NativeEventEmitter, requireNativeComponent } from 'react-native';
 
 export type BottomSheetState = 'hidden' | 'collapsed' | 'expanded';
 
@@ -25,21 +25,27 @@ const styles = StyleSheet.create({
 
 export const PullUpsView = requireNativeComponent('RNPullUpView');
 
-class PullUps extends Modal {
+const PullUps = (props: PullUpProps) => {
+  const { children, renderContent, contentStyle, onSheetStateChanged, ...rest } = props;
 
-  render(){
-    const result = super.render();
-    if(!result) return result;
+  useEffect(() => {
+    const eventEmitter = new NativeEventEmitter();
+    const subscription = eventEmitter.addListener(
+      'BottomSheetStateChange',
+      (event) => {
+        onSheetStateChanged?.(event);
+      }
+    );
+    return () => subscription.remove();
+  }, [onSheetStateChanged]);
 
-    const { key, ref, props } = result;
-    //console.log('MODAL RESULT', Object.keys(result));
-    return <PullUpsView
-      key={key}
-      ref={ref}
-      {...props}
-    />
-  }
-
-}
+  return (
+    <Modal {...rest}>
+      <PullUpsView style={[ styles.primary, props.style ]}>
+        { children }
+      </PullUpsView>
+    </Modal>
+  );
+};
 
 export default PullUps;
