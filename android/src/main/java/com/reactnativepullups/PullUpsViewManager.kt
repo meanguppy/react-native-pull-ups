@@ -37,13 +37,26 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   override fun createViewInstance(reactContext: ThemedReactContext): CoordinatorLayout {
     context = reactContext
-    var view = LayoutInflater.from(reactContext).inflate(
-      R.layout.bottom_sheet,
-      null
-    ) as CoordinatorLayout
+    var view = LayoutInflater.from(reactContext).inflate(R.layout.bottom_sheet, null) as CoordinatorLayout
     contents = view.findViewById(R.id.contents) as CustomContentView
-    behavior = BottomSheetBehavior.from(contents)
+    behavior = BottomSheetBehavior.from(contents).apply {
+      setPeekHeight(180)
+      setHideable(false)
+      setSkipCollapsed(false)
+    }
     return view
+  }
+
+  @ReactProp(name = "state")
+  fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
+    if(stateStr != null) matchState(stateStr)?.let {
+
+      if(behavior.state != it.nativeState){
+        behavior.state = it.nativeState
+      }
+      updateState(it)
+
+    }
   }
 
   private fun matchState(sheetState: Int) = when (sheetState) {

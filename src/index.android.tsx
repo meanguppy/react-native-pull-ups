@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
 export const PullUpsView = requireNativeComponent('RNPullUpView');
 
 const PullUps = (props: PullUpProps) => {
-  const { children, renderContent, contentStyle, onSheetStateChanged, ...rest } = props;
+  const { children, state, onSheetStateChanged, ...rest } = props;
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
@@ -40,11 +40,9 @@ const PullUps = (props: PullUpProps) => {
   }, [onSheetStateChanged]);
 
   return (
-    <Modal {...rest}>
-      <PullUpsView style={[ styles.primary, props.style ]}>
+      <PullUpsView state={state} style={[ styles.primary, props.style ]}>
         { children }
       </PullUpsView>
-    </Modal>
   );
 };
 
