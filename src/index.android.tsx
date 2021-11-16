@@ -19,14 +19,14 @@ interface PullUpProps {
 }
 
 const styles = StyleSheet.create({
-  primary: { flex: 1 },
+  primary: { position: 'absolute', width: '100%', bottom: 0 },
   sheet: { backgroundColor: 'white' },
 });
 
 export const PullUpsView = requireNativeComponent('RNPullUpView');
 
 const PullUps = (props: PullUpProps) => {
-  const { children, state, onSheetStateChanged, ...rest } = props;
+  const { children, style, containerStyle, onSheetStateChanged, ...rest } = props;
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
@@ -40,8 +40,10 @@ const PullUps = (props: PullUpProps) => {
   }, [onSheetStateChanged]);
 
   return (
-      <PullUpsView state={state} style={[ styles.primary, props.style ]}>
-        { children }
+      <PullUpsView {...rest} style={[ styles.primary, style ]}>
+        <View style={[ styles.sheet, containerStyle ]}>
+          { children }
+        </View>
       </PullUpsView>
   );
 };

@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Modal, TouchableOpacity, Button } from 'react-native';
 import PullUp, { BottomSheetState } from 'react-native-pull-ups';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -57,11 +57,14 @@ function ContentView(){
   return (
     <View style={{ flex: 1 }}>
       <ScrollView>
+        <Button title="Toggle" onPress={onPress}/>
         <Text>Hello</Text>
         { renderBackground() }
         <TouchableOpacity style={{ width: '100%', height: 900, backgroundColor: 'green' }}/>
       </ScrollView>
-      <PullUp style={{ position: 'absolute', bottom: 0, flex: 0, width: '100%' }} state="expanded">
+      <PullUp
+        onSheetStateChanged={onSheetChanged}
+        state={bottomSheetState}>
         <CoolBeans/>
       </PullUp>
     </View>

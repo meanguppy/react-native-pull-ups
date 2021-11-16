@@ -34,22 +34,48 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     var view = LayoutInflater.from(reactContext).inflate(R.layout.bottom_sheet, null) as CoordinatorLayout
     contents = view.findViewById(R.id.contents) as CustomContentView
     behavior = BottomSheetBehavior.from(contents).apply {
-      setPeekHeight(180)
-      setHideable(false)
+      addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+          updateState(matchState(newState))
+        }
+      })
+      setHalfExpandedRatio(0.9999999f)
+      setFitToContents(true)
+      setHideable(true)
       setSkipCollapsed(false)
+      setPeekHeight(300)
     }
     return view
   }
 
+  @ReactProp(name = "hideable")
+  fun setHideable(parent: CoordinatorLayout, hideable: Boolean){
+    behavior.setHideable(hideable)
+  }
+
+  @ReactProp(name = "collapsible")
+  fun setCollapsible(parent: CoordinatorLayout, collapsible: Boolean){
+    behavior.setSkipCollapsed(!collapsible)
+  }
+
+  @ReactProp(name = "expandedOffset")
+  fun setExpandedOffset(parent: CoordinatorLayout, offset: Int){
+    behavior.setExpandedOffset(offset)
+  }
+
+  @ReactProp(name = "peekHeight")
+  fun setPeekHeight(parent: CoordinatorLayout, height: Int){
+    behavior.setPeekHeight(height)
+  }
+
   @ReactProp(name = "state")
   fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
-    if(stateStr != null) matchState(stateStr)?.let {
-
+    matchState(stateStr!!)?.let {
       if(behavior.state != it.nativeState){
         behavior.state = it.nativeState
       }
       updateState(it)
-
     }
   }
 
