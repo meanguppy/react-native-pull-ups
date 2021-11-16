@@ -1,17 +1,8 @@
 package com.reactnativepullups
 
-import android.util.Log
 import android.util.AttributeSet
 import android.content.Context
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
-import android.view.MotionEvent
 import android.widget.RelativeLayout
-import android.widget.FrameLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.widget.NestedScrollView
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 class CustomContentView : RelativeLayout {
 

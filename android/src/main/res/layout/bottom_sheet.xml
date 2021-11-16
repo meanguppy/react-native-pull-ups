@@ -1,12 +1,8 @@
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<com.reactnativepullups.CustomCoordinatorLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
   android:layout_width="match_parent"
   android:layout_height="match_parent">
-
-  <com.reactnativepullups.CustomTestView
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"/>
 
   <com.reactnativepullups.CustomContentView
       android:id="@+id/contents"
@@ -14,4 +10,4 @@
       android:layout_height="wrap_content"
       app:layout_behavior="@string/bottom_sheet_behavior"/>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</com.reactnativepullups.CustomCoordinatorLayout>
