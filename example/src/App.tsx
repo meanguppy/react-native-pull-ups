@@ -1,18 +1,20 @@
 import 'react-native-gesture-handler';
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, Modal, TouchableOpacity, Button } from 'react-native';
+import { View, Text, ScrollView, Modal, TouchableOpacity, Button, Dimensions } from 'react-native';
 import PullUp, { BottomSheetState } from 'react-native-pull-ups';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
-function CoolBeans(){
+
+function PullUpContent(){
   const [num, setNum] = useState(10)
 
   setTimeout(() => {
     if(num !== 12) setNum(12)
   }, 2000)
 
-  return <View style={{ paddingHorizontal: 16, paddingVertical: 32, backgroundColor: '#f0f', flexDirection: 'row', height: 250, justifyContent: 'center', alignItems: 'stretch' }}>
+  return <View style={{ paddingHorizontal: 16, paddingVertical: 32,
+  backgroundColor: '#f0f', flexDirection: 'row', height: 200, justifyContent: 'center', alignItems: 'stretch' }}>
     <TouchableOpacity style={{ flex: 1, backgroundColor: '#0ff' }}/>
     <TouchableOpacity style={{ flex: 1, backgroundColor: '#0f0' }}/>
     <TouchableOpacity style={{ flex: 1, backgroundColor: '#00f' }}/>
@@ -20,24 +22,9 @@ function CoolBeans(){
   </View>
 }
 
-function FooterThing(){
-  const [num, setNum] = useState(48)
-
-  setTimeout(() => {
-    if(num !== 120) setNum(120)
-  }, 2000)
-
-  return (
-    <View style={{ bottom: 0, height: num, backgroundColor: 'yellow' }}/>
-  );
-}
-
 function ContentView(){
 
-  const [bottomSheetState, setBottomSheetState] = useState<BottomSheetState>(
-    'collapsed'
-  );
-  const [useDialog, setUseDialog] = useState<Boolean>(false);
+  const [bottomSheetState, setBottomSheetState] = useState<BottomSheetState>('collapsed');
 
   const renderBackground = () =>
     new Array(100)
@@ -58,14 +45,14 @@ function ContentView(){
     <View style={{ flex: 1 }}>
       <ScrollView>
         <Button title="Toggle" onPress={onPress}/>
-        <Text>Hello</Text>
         { renderBackground() }
-        <TouchableOpacity style={{ width: '100%', height: 900, backgroundColor: 'green' }}/>
+        <TouchableOpacity style={{ width: '100%', height: 600, backgroundColor: 'green' }}/>
       </ScrollView>
+      <View style={{ bottom: 0, height: 64, backgroundColor: 'orange' }}/>
       <PullUp
         onSheetStateChanged={onSheetChanged}
         state={bottomSheetState}>
-        <CoolBeans/>
+        <PullUpContent/>
       </PullUp>
     </View>
   );
