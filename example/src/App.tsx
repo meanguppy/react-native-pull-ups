@@ -1,49 +1,80 @@
-import * as React from 'react';
-// import { useState } from 'react';
+import 'react-native-gesture-handler';
+import React, { useCallback, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Button } from 'react-native';
+import PullUp, { BottomSheetState } from 'react-native-pull-ups';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 
-import { View, Text, ScrollView, SafeAreaView } from 'react-native';
-// import PullUp, { OnChangeContext } from 'react-native-pull-ups';
-import PullUp from 'react-native-pull-ups';
+function PullUpContent() {
+  return (
+    <View
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 32,
+        height: 200,
+        backgroundColor: '#f0f',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'stretch',
+      }}
+    >
+      <TouchableOpacity style={{ flex: 1, backgroundColor: '#0ff' }} />
+      <TouchableOpacity style={{ flex: 1, backgroundColor: '#0f0' }} />
+      <TouchableOpacity style={{ flex: 1, backgroundColor: '#00f' }} />
+      <TouchableOpacity style={{ flex: 1, backgroundColor: '#ff0' }} />
+    </View>
+  );
+}
 
-export default function App() {
-  // const [scrollViewIsScrollable, setScrollViewIsScrollable] = useState(true);
-
-  // const handleChange = (evt: OnChangeContext) => {
-  //   const { isFullScreen } = evt.nativeEvent;
-  //   if (isFullScreen) {
-  //     setScrollViewIsScrollable(true);
-  //   } else if (!isFullScreen) {
-  //     setScrollViewIsScrollable(false);
-  //   }
-  // };
+function ContentView() {
+  const [bottomSheetState, setBottomSheetState] = useState<BottomSheetState>(
+    'collapsed'
+  );
 
   const renderBackground = () =>
     new Array(100)
       .fill('')
-      .map((_, i) => <Text key={`bg-${i}`}>Background</Text>);
+      .map((_, i) => <Text key={`bg-${i}`}>Background {i}</Text>);
 
-  const renderPullUpContent = () =>
-    new Array(100)
-      .fill('')
-      .map((_, i) => <Text key={`content-${i}`}>Content</Text>);
+  const onSheetChanged = useCallback((newState: BottomSheetState) => {
+    console.log(newState);
+    setBottomSheetState(newState);
+  }, []);
+
+  const onPress = useCallback(() => {
+    const target = bottomSheetState === 'hidden' ? 'expanded' : 'hidden';
+    setBottomSheetState(target);
+  }, [bottomSheetState]);
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
+      <ScrollView>
+        <Button title="Toggle" onPress={onPress} />
+        {renderBackground()}
+        <TouchableOpacity
+          style={{ width: '100%', height: 200, backgroundColor: 'green' }}
+        />
+      </ScrollView>
+      <View style={{ bottom: 0, height: 64, backgroundColor: 'orange' }} />
       <PullUp
-        // onSizeChange={handleChange}
-        pullBarHeight={20}
-        presentingViewCornerRadius={10}
-        useInlineMode={true}
-        show={true}
-        sizes={['30%', '50%', 'fullscreen']}
-        shrinkPresentingViewController={false}
-        allowGestureThroughOverlay={true}
-        pullUpContent={renderPullUpContent()}
+        modal
+        state={bottomSheetState}
+        peekHeight={120}
+        collapsible={true}
+        onRequestClose={() => setBottomSheetState('hidden')}
+        onSheetStateChanged={onSheetChanged}
       >
-        <SafeAreaView>
-          <ScrollView>{renderBackground()}</ScrollView>
-        </SafeAreaView>
+        <PullUpContent />
       </PullUp>
     </View>
   );
+}
+
+const AppNavigator = createStackNavigator({
+  Home: { screen: ContentView },
+});
+const AppContainer = createAppContainer(AppNavigator);
+
+export default function App() {
+  return <AppContainer />;
 }
