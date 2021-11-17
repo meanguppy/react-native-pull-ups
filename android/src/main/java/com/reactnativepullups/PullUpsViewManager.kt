@@ -8,6 +8,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.bridge.*
 import com.facebook.react.common.MapBuilder
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
@@ -44,7 +45,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
       setFitToContents(true)
       setHideable(true)
       setSkipCollapsed(false)
-      setPeekHeight(300)
+      setPeekHeight(PixelUtil.toPixelFromDIP(120.0).toInt())
     }
     return view
   }
@@ -59,14 +60,9 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     behavior.setSkipCollapsed(!collapsible)
   }
 
-  @ReactProp(name = "expandedOffset")
-  fun setExpandedOffset(parent: CoordinatorLayout, offset: Int){
-    behavior.setExpandedOffset(offset)
-  }
-
   @ReactProp(name = "peekHeight")
-  fun setPeekHeight(parent: CoordinatorLayout, height: Int){
-    behavior.setPeekHeight(height)
+  fun setPeekHeight(parent: CoordinatorLayout, height: Double){
+    behavior.setPeekHeight(PixelUtil.toPixelFromDIP(height).toInt())
   }
 
   @ReactProp(name = "state")
@@ -118,7 +114,5 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   override fun getChildCount(parent: CoordinatorLayout)
     = contents.childCount
-
-  override fun needsCustomLayoutForChildren() = false
 
 }

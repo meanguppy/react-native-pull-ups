@@ -1,39 +1,30 @@
 import React, { useEffect } from 'react';
 import {
   View,
-  ScrollView,
   TouchableWithoutFeedback,
   StyleSheet,
   NativeEventEmitter,
   requireNativeComponent,
 } from 'react-native';
+import CustomAndroidModal from './CustomAndroidModal';
 
 export type BottomSheetState = 'hidden' | 'collapsed' | 'expanded';
 
 interface PullUpProps {
+  state?: BottomSheetState;
   onSheetStateChanged?: (newState: BottomSheetState) => void;
   hideable?: boolean;
   collapsible?: boolean;
-  fitToContents?: boolean;
-  expandedOffset?: number;
+  height?: number;
   peekHeight?: number;
-  sheetState?: BottomSheetState;
   style?: object;
-  containerStyle?: object;
   children?: object;
 }
 
 const NativePullUp = requireNativeComponent('RNPullUpView');
-const NativeModal = requireNativeComponent('RNPullUpModal');
 
 const PullUpBase = (props: PullUpProps) => {
-  const {
-    style,
-    children,
-    containerStyle,
-    onSheetStateChanged,
-    ...rest
-  } = props;
+  const { style, children, height, onSheetStateChanged, ...rest } = props;
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
@@ -47,19 +38,11 @@ const PullUpBase = (props: PullUpProps) => {
   }, [onSheetStateChanged]);
 
   return (
-    <NativePullUp {...rest} style={[styles.primary, style]}>
-      <View style={[styles.sheet, containerStyle]}>{children}</View>
+    <NativePullUp {...rest} style={[styles.primary, height && { height }]}>
+      <View style={[styles.sheet, style]}>{children}</View>
     </NativePullUp>
   );
 };
-
-const CustomModal = (props) => (
-  <NativeModal {...props} style={styles.modal}>
-    <ScrollView.Context.Provider value={null}>
-      <View style={styles.modalContainer}>{props.children}</View>
-    </ScrollView.Context.Provider>
-  </NativeModal>
-);
 
 const PullUpModal = (props) => {
   const { state, onRequestClose } = props;
@@ -68,16 +51,16 @@ const PullUpModal = (props) => {
   const forceState = state === 'collapsed' ? 'expanded' : state;
 
   return (
-    <CustomModal
+    <CustomAndroidModal
       onRequestClose={onRequestClose}
+      onOrientationChange={() => console.log('orientation')}
       animationType="slide"
-      presentationStyle="fullScreen"
     >
       <TouchableWithoutFeedback onPress={onRequestClose}>
         <View style={styles.flex} />
       </TouchableWithoutFeedback>
       <PullUpBase {...props} collapsible={false} state={forceState} />
-    </CustomModal>
+    </CustomAndroidModal>
   );
 };
 
@@ -92,16 +75,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: 'white',
     flex: 1,
+    backgroundColor: 'white',
   },
   modal: {
     position: 'absolute',
-  },
-  modalContainer: {
-    top: 0,
-    left: 0,
-    flex: 1,
   },
   flex: {
     flex: 1,

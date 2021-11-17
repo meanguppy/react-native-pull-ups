@@ -11,9 +11,9 @@ function PullUpContent() {
       style={{
         paddingHorizontal: 16,
         paddingVertical: 32,
+        height: 200,
         backgroundColor: '#f0f',
         flexDirection: 'row',
-        height: 200,
         justifyContent: 'center',
         alignItems: 'stretch',
       }}
@@ -28,7 +28,7 @@ function PullUpContent() {
 
 function ContentView() {
   const [bottomSheetState, setBottomSheetState] = useState<BottomSheetState>(
-    'hidden'
+    'collapsed'
   );
 
   const renderBackground = () =>
@@ -52,14 +52,15 @@ function ContentView() {
         <Button title="Toggle" onPress={onPress} />
         {renderBackground()}
         <TouchableOpacity
-          style={{ width: '100%', height: 600, backgroundColor: 'green' }}
+          style={{ width: '100%', height: 200, backgroundColor: 'green' }}
         />
       </ScrollView>
       <View style={{ bottom: 0, height: 64, backgroundColor: 'orange' }} />
       <PullUp
         modal
         state={bottomSheetState}
-        collapsible={false}
+        peekHeight={120}
+        collapsible={true}
         onRequestClose={() => setBottomSheetState('hidden')}
         onSheetStateChanged={onSheetChanged}
       >

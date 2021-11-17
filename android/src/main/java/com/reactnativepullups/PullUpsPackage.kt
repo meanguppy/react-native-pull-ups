@@ -12,6 +12,6 @@ class PullUpsPackage : ReactPackage {
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-        return listOf(PullUpsViewManager(), ModalManager())
+        return listOf(PullUpsViewManager())
     }
 }
