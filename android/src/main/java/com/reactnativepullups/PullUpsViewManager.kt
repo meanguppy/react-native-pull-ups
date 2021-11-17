@@ -3,6 +3,7 @@ package com.reactnativepullups
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.RelativeLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.bridge.*
 import com.facebook.react.common.MapBuilder
@@ -12,14 +13,13 @@ import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-private const val STATE_CHANGE_EVENT_NAME = "BottomSheetStateChange"
 
 class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   override fun getName() = "RNPullUpView"
   
   private lateinit var context: ThemedReactContext
-  private lateinit var contents: CustomContentView
+  private lateinit var contents: RelativeLayout
   private lateinit var behavior: BottomSheetBehavior<*>
   private var state: BottomSheetState = BottomSheetState.COLLAPSED
 
@@ -32,7 +32,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
   override fun createViewInstance(reactContext: ThemedReactContext): CoordinatorLayout {
     context = reactContext
     var view = LayoutInflater.from(reactContext).inflate(R.layout.bottom_sheet, null) as CoordinatorLayout
-    contents = view.findViewById(R.id.contents) as CustomContentView
+    contents = view.findViewById(R.id.contents) as RelativeLayout
     behavior = BottomSheetBehavior.from(contents).apply {
       addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
         override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
@@ -99,7 +99,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
       //Log.d("PULLUPS", "InternalState: " + state.str)
       context
         .getJSModule(RCTDeviceEventEmitter::class.java)
-        .emit(STATE_CHANGE_EVENT_NAME, state.str)
+        .emit("BottomSheetStateChange", state.str)
     }
   }
 

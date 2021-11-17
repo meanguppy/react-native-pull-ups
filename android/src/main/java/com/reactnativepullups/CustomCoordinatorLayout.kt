@@ -1,8 +1,8 @@
 package com.reactnativepullups
 
-import android.util.Log
-import android.util.AttributeSet
 import android.content.Context
+import android.util.AttributeSet
+import android.util.Log
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.ReactPointerEventsView
 import com.facebook.react.uimanager.PointerEvents

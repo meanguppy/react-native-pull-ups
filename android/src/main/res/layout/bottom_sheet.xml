@@ -4,10 +4,10 @@
   android:layout_width="match_parent"
   android:layout_height="match_parent">
 
-  <com.reactnativepullups.CustomContentView
+  <RelativeLayout
       android:id="@+id/contents"
       android:layout_width="match_parent"
-      android:layout_height="wrap_content"
+      android:layout_height="match_parent"
       app:layout_behavior="@string/bottom_sheet_behavior"/>
 
 </com.reactnativepullups.CustomCoordinatorLayout>
