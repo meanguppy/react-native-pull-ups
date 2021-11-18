@@ -15,6 +15,8 @@ class PullUpView : UIView {
     
     var pullUpVc: UIViewController = UIViewController()
     var sheetController: SheetViewController? = nil
+    var touchHandler: RCTTouchHandler? = nil
+    var onSizeChange: RCTDirectEventBlock? = nil
 
     var sheetOptions: SheetOptions = SheetOptions()
     var pullBarHeight: CGFloat = 24
@@ -40,17 +42,13 @@ class PullUpView : UIView {
     var contentBackgroundColor: UIColor = UIColor.white
     var overlayColor: UIColor = UIColor(white: 0, alpha: 0.25)
     var allowGestureThroughOverlay: Bool = true
-    var onSizeChange: RCTDirectEventBlock? = nil
     var show: Bool = true
     var isShown: Bool = false
     var isInit: Bool = true
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame);
-        self.frame = frame;
-        self.assignOptions()
-        self.assignController()
-        
+
+    init(bridge: RCTBridge){
+        super.init(frame: CGRect.zero)
+        touchHandler = RCTTouchHandler(bridge: bridge)
         // Use this notificaiton for a viewDidLoad/init comparison in RN
         NotificationCenter.default.addObserver(self, selector: #selector(handleInit(notification:)), name: NSNotification.Name(rawValue: "RCTContentDidAppearNotification"), object: nil)
     }
@@ -169,13 +167,14 @@ class PullUpView : UIView {
     
     override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
         self.pullUpVc.view.addSubview(subview)
+        touchHandler?.attach(to: subview)
     }
     
     override func removeReactSubview(_ subview: UIView!) {
-        subview.removeFromSuperview()
         super.removeReactSubview(subview)
+        subview.removeFromSuperview()
+        touchHandler?.detach(from: subview)
     }
-    
    
     @objc func setPullBarHeight (_ height: NSNumber) {
         self.pullBarHeight = CGFloat(truncating: height)
@@ -371,7 +370,6 @@ class PullUpView : UIView {
             self.reactViewController().present(self.sheetController!, animated: true)
             
         }
-        
     }
     
     private func hideSheet (inline: Bool) {
@@ -393,6 +391,6 @@ class RNPullUpView: RCTViewManager {
     }
     
     override func view() -> UIView! {
-        return PullUpView()
+        return PullUpView(bridge: self.bridge)
     }
 }
