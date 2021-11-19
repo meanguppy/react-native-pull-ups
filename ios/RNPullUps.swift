@@ -30,7 +30,6 @@ class PullUpView : UIView {
 
     /* Configurable props */
     var tapToDismissModal: Bool = true
-    var useInlineMode: Bool = true
     var maxWidth: CGFloat? = nil
 
     /* FittedSheets controller */
@@ -42,7 +41,7 @@ class PullUpView : UIView {
     var treatPullBarAsClear: Bool = false
     var allowPullingPastMaxHeight: Bool = false
     var contentBackgroundColor: UIColor = UIColor.white
-    var overlayColor: UIColor = UIColor(white: 0, alpha: 0.25)
+    var overlayColor: UIColor = UIColor(white: 0, alpha: 0.5)
 
     /* FittedSheets options (requires remount) */
     var pullBarHeight: CGFloat = 24
@@ -93,7 +92,7 @@ class PullUpView : UIView {
             // similar to the native modal
             shrinkPresentingViewController: self.shrinkPresentingViewController,
             // Determines if using inline mode or not
-            useInlineMode: self.useInlineMode,
+            useInlineMode: !self.useModalMode,
             // Adds a padding on the left and right of the
             // sheet with this amount. Defaults to zero (no padding)
             horizontalPadding: self.horizontalPadding,
@@ -130,7 +129,7 @@ class PullUpView : UIView {
         sheetController.treatPullBarAsClear = self.treatPullBarAsClear
         
         // Disable the dismiss on background tap functionality
-        sheetController.dismissOnOverlayTap = self.useModalMode && self.tapToDismissModal
+        sheetController.dismissOnOverlayTap = self.tapToDismissModal
         
         // Disable the ability to pull down to dismiss the modal
         // NOTE: We handle this manually when `state` is `hidden`
@@ -148,7 +147,7 @@ class PullUpView : UIView {
         sheetController.contentBackgroundColor = self.contentBackgroundColor
         
         // Change the overlay color
-        sheetController.overlayColor = self.overlayColor
+        sheetController.overlayColor = self.useModalMode ? self.overlayColor : UIColor.clear
         
         // For inline mode interaction
         sheetController.allowGestureThroughOverlay = !self.useModalMode
@@ -198,6 +197,7 @@ class PullUpView : UIView {
     @objc override func didSetProps(_ changedProps: [String]!) {
         if(!hasInitialized){ return }
         if(remountRequired){
+            sheetController!.didDismiss = nil
             sheetController!.attemptDismiss(animated: false)
             isMounted = false
             self.assignController()
@@ -227,7 +227,9 @@ class PullUpView : UIView {
     
     private func mountSheet() {
         let rvc = self.reactViewController()!
-        if(useInlineMode) {
+        if(useModalMode) {
+            rvc.present(sheetController!, animated: true)
+        } else {
             sheetController!.willMove(toParent: rvc)
             rvc.addChild(sheetController!)
             rvc.view.addSubview(sheetController!.view)
@@ -240,8 +242,6 @@ class PullUpView : UIView {
                 sheetController!.view.trailingAnchor.constraint(equalTo: rvc.view.trailingAnchor)
             ])
             sheetController!.animateIn(size: actualSizes[currentSizeIdx], duration: 0.3)
-        } else {
-            rvc.present(sheetController!, animated: true)
         }
         self.isMounted = true
         self.notifyStateChange(idx: currentSizeIdx)
@@ -255,6 +255,22 @@ class PullUpView : UIView {
 
         self.isMounted = false
         self.notifyStateChange(idx: 0)
+    }
+    
+    /* Prop setters: internal usage */
+    @objc func setUseModalMode(_ useModalMode: Bool) {
+        self.useModalMode = useModalMode
+        self.remountRequired = true
+    }
+
+    @objc func setState (_ state: String) {
+        if let idx = ["hidden","collapsed","expanded"].firstIndex(of: state) {
+            self.currentSizeIdx = idx
+        }
+    }
+    
+    @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
+        self.onStateChanged = onStateChanged
     }
 
     /* Prop setters: FittedSheets options */
@@ -280,11 +296,6 @@ class PullUpView : UIView {
     
     @objc func setShrinkPresentingViewController (_ shrinkPresentingViewController: Bool) {
         self.shrinkPresentingViewController = shrinkPresentingViewController
-        self.remountRequired = true
-    }
-    
-    @objc func setUseInlineMode (_ useInlineMode: Bool) {
-        self.useInlineMode = useInlineMode
         self.remountRequired = true
     }
     
@@ -344,6 +355,11 @@ class PullUpView : UIView {
         return .fixed(0)
     }
     
+    @objc func setTapToDismissModal (_ tapToDismissModal: Bool) {
+        self.tapToDismissModal = tapToDismissModal
+        sheetController?.dismissOnOverlayTap = self.tapToDismissModal
+    }
+    
     @objc func setGripSize (_ gripSize: NSDictionary) {
         let width: Int = Int(gripSize.value(forKey: "width") as! String) ?? 0
         let height: Int = Int(gripSize.value(forKey: "height") as! String) ?? 0
@@ -390,29 +406,6 @@ class PullUpView : UIView {
         self.overlayColor = UIColor(cgColor: overlayColor)
         sheetController?.overlayColor = self.overlayColor
     }
-
-    /* Prop setters: internal usage */
-    @objc func setState (_ state: String) {
-        if let idx = ["hidden","collapsed","expanded"].firstIndex(of: state) {
-            self.currentSizeIdx = idx
-        }
-    }
-
-    @objc func setUseModalMode(_ useModalMode: Bool) {
-        self.useModalMode = useModalMode
-        sheetController?.dismissOnOverlayTap = self.useModalMode && self.tapToDismissModal
-        sheetController?.allowGestureThroughOverlay = !self.useModalMode
-    }
-    
-    @objc func setTapToDismissModal (_ tapToDismissModal: Bool) {
-        self.tapToDismissModal = tapToDismissModal
-        sheetController?.dismissOnOverlayTap = self.useModalMode && self.tapToDismissModal
-    }
-    
-    @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
-        self.onStateChanged = onStateChanged
-    }
-    
 }
 
 

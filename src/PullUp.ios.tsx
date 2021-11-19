@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import PropTypes from 'prop-types';
 import {
   View,
   TouchableWithoutFeedback,
@@ -7,7 +8,26 @@ import {
   requireNativeComponent,
 } from 'react-native';
 
+const propTypes = {
+  state: PropTypes.oneOf(['hidden','collapsed','expanded']).isRequired,
+  height: PropTypes.number.isRequired,
+  collapsedHeight: PropTypes.number,
+  modal: PropTypes.bool,
+  hideable: PropTypes.bool,
+  dismissable: PropTypes.bool,
+  tapToDismissModal: PropTypes.bool,
+};
+const defaultProps = {
+  modal: false,
+  hideable: true,
+  dismissable: true,
+  tapToDismissModal: true,
+};
+
 const NativePullUp = requireNativeComponent('RNPullUpView');
+
+//const styles = StyleSheet.create({
+//});
 
 /* `allowedSizes`: the user is allowed to drag the sheet to these sizes.
  * `actualSizes`: actual sizes that the code can resize the sheet to. */
@@ -30,7 +50,7 @@ function makeSizes({ height, collapsedHeight, modal, dismissable, hideable }){
 }
 
 const PullUp = (props) => {
-  const { state, children, modal, inline, tapToDismissModal, onStateChanged } = props;
+  const { state, children, modal, tapToDismissModal, onStateChanged } = props;
 
   const onNativeStateChanged = useCallback((evt) => {
     const { state: newState } = evt.nativeEvent;
@@ -46,14 +66,14 @@ const PullUp = (props) => {
       allowedSizes={allowedSizes}
       actualSizes={actualSizes}
       useModalMode={modal}
-      useInlineMode={inline}
       tapToDismissModal={tapToDismissModal}
       onStateChanged={onNativeStateChanged}
+      iosStyling={{ hello: 1, world: 2 }}
     >{ children }</NativePullUp>
   );
 };
 
-const styles = StyleSheet.create({
-});
+PullUp.propTypes = propTypes;
+PullUp.defaultProps = defaultProps;
 
 export default PullUp;

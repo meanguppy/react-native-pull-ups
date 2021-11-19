@@ -6,12 +6,16 @@ RCT_EXPORT_VIEW_PROPERTY(state, NSString);
 RCT_EXPORT_VIEW_PROPERTY(allowedSizes, NSArray);
 RCT_EXPORT_VIEW_PROPERTY(actualSizes, NSArray);
 RCT_EXPORT_VIEW_PROPERTY(useModalMode, BOOL);
-RCT_EXPORT_VIEW_PROPERTY(useInlineMode, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(tapToDismissModal, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(maxWidth, NSNumber);
 RCT_EXPORT_VIEW_PROPERTY(onStateChanged, RCTDirectEventBlock);
 
-//RCT_CUSTOM_VIEW_PROPERTY(iosStyling, NSDictionary, nil)
+//RCT_CUSTOM_VIEW_PROPERTY(iosStyling, NSDictionary, RNPullUpView){
+//  [json enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+//		[view updateStyleWithProp:key value:obj]
+//  }];
+//}
+
 //RCT_EXPORT_VIEW_PROPERTY(gripSize, NSDictionary);
 //RCT_EXPORT_VIEW_PROPERTY(gripColor, CGColor);
 //RCT_EXPORT_VIEW_PROPERTY(cornerRadius, NSNumber);
