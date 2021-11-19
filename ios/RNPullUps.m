@@ -11,6 +11,7 @@ RCT_EXPORT_VIEW_PROPERTY(shrinkPresentingViewController, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(useInlineMode, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(horizontalPadding, NSNumber);
 RCT_EXPORT_VIEW_PROPERTY(maxWidth, NSNumber);
+RCT_EXPORT_VIEW_PROPERTY(state, NSString);
 RCT_EXPORT_VIEW_PROPERTY(sizes, NSArray);
 RCT_EXPORT_VIEW_PROPERTY(gripSize, NSDictionary);
 RCT_EXPORT_VIEW_PROPERTY(gripColor, CGColor);
@@ -25,6 +26,6 @@ RCT_EXPORT_VIEW_PROPERTY(autoAdjustToKeyboard, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(contentBackgroundColor, CGColor);
 RCT_EXPORT_VIEW_PROPERTY(overlayColor, CGColor);
 RCT_EXPORT_VIEW_PROPERTY(allowGestureThroughOverlay, BOOL);
-RCT_EXPORT_VIEW_PROPERTY(onSizeChange, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onStateChanged, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(show, BOOL)
 @end

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   TouchableWithoutFeedback,
@@ -7,30 +7,34 @@ import {
   requireNativeComponent,
 } from 'react-native';
 
-export type BottomSheetState = 'hidden' | 'collapsed' | 'expanded';
-
-interface PullUpProps {
-  state?: BottomSheetState;
-  onSheetStateChanged?: (newState: BottomSheetState) => void;
-  hideable?: boolean;
-  collapsible?: boolean;
-  height?: number;
-  peekHeight?: number;
-  style?: object;
-  children?: object;
-}
 
 const NativePullUp = requireNativeComponent('RNPullUpView');
+const ZERO = '0px';
 
 const PullUp = (props) => {
-  const { state, onRequestClose } = props;
-  if (state === 'hidden') return null;
+  const { state, height, collapsedHeight, modal, collapsible, hideable, children, onStateChanged } = props;
+
+  const onNativeStateChanged = useCallback((evt) => {
+    const { state: newState } = evt.nativeEvent;
+    onStateChanged?.(newState);
+  }, [onStateChanged]);
+
+  const sizes = [
+    ZERO,
+    (collapsedHeight ? (modal ? `${height}px` : `${collapsedHeight}px`) : ZERO),
+    `${height}px`,
+  ];
 
   return (
     <NativePullUp
-      style={{ position: 'absolute', bottom: 0, width: 100, height: 100, backgroundColor: 'red' }}
-      {...props}
-    />
+      style={{ position: 'absolute', bottom: 0, width: '100%', backgroundColor: 'red' }}
+      state={state}
+      sizes={sizes}
+      useInlineMode={!modal}
+      dismissOnPull={modal}
+      dismissOnOverlayTap={modal}
+      onStateChanged={onNativeStateChanged}
+    >{ children }</NativePullUp>
   );
 };
 

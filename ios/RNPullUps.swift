@@ -8,7 +8,6 @@
 import Foundation
 import UIKit
 import FittedSheets
-import NotificationCenter
 
 @objc(PullUpView)
 class PullUpView : UIView {
@@ -16,8 +15,12 @@ class PullUpView : UIView {
     var pullUpVc: UIViewController = UIViewController()
     var sheetController: SheetViewController? = nil
     var touchHandler: RCTTouchHandler? = nil
-    var onSizeChange: RCTDirectEventBlock? = nil
+    var currentSizeIdx: Int = 0
+    var hasInitialized: Bool = false
+    var isMounted: Bool = false
+    var ignoreNextSizeChange: Bool = false
 
+    /* FittedSheets options */
     var sheetOptions: SheetOptions = SheetOptions()
     var pullBarHeight: CGFloat = 24
     var presentingViewCornerRadius: CGFloat = 20
@@ -42,25 +45,25 @@ class PullUpView : UIView {
     var contentBackgroundColor: UIColor = UIColor.white
     var overlayColor: UIColor = UIColor(white: 0, alpha: 0.25)
     var allowGestureThroughOverlay: Bool = true
-    var show: Bool = true
-    var isShown: Bool = false
-    var isInit: Bool = true
+    var onStateChanged: RCTDirectEventBlock? = nil
 
     init(bridge: RCTBridge){
         super.init(frame: CGRect.zero)
         touchHandler = RCTTouchHandler(bridge: bridge)
-        // Use this notificaiton for a viewDidLoad/init comparison in RN
-        NotificationCenter.default.addObserver(self, selector: #selector(handleInit(notification:)), name: NSNotification.Name(rawValue: "RCTContentDidAppearNotification"), object: nil)
     }
     
-    @objc func handleInit(notification: NSNotification) {
-        self.showIfNecessary()
-        self.isInit = false;
-    }
-    
-
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews(){
+        super.layoutSubviews()
+        if(self.hasInitialized){ return }
+
+        self.hasInitialized = true
+        self.assignOptions()
+        self.assignController()
+        self.syncSheetState()
     }
     
     private func assignOptions () {
@@ -146,7 +149,6 @@ class PullUpView : UIView {
         // For inline mode interaction
         sheetController.allowGestureThroughOverlay = self.allowGestureThroughOverlay
         
-                
         sheetController.sizeChanged = self.sizeChanged
         
         sheetController.didDismiss = self.didDismiss
@@ -155,14 +157,27 @@ class PullUpView : UIView {
     }
     
     private func sizeChanged (vc: SheetViewController, size: SheetSize, newHeight: CGFloat) {
-        let context = [ "height": newHeight, "isFullScreen": size == .fullscreen ] as [String : Any];
-        if(self.onSizeChange != nil) {
-            self.onSizeChange!(context)
+        if(ignoreNextSizeChange){
+            ignoreNextSizeChange = false
+            return
+        }
+        if let idx = self.sizes.firstIndex(of: size) {
+            self.notifyStateChange(idx: idx)
         }
     }
     
     private func didDismiss (vc: SheetViewController) {
-        self.isShown = false
+        self.isMounted = false
+        self.notifyStateChange(idx: 0)
+    }
+
+    private func notifyStateChange(idx: Int) {
+        let didChange = (self.currentSizeIdx != idx)
+        if(didChange){
+            self.currentSizeIdx = idx
+            let newState = ["hidden","collapsed","expanded"][idx]
+            self.onStateChanged?(["state": newState])
+        }
     }
     
     override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
@@ -175,7 +190,67 @@ class PullUpView : UIView {
         subview.removeFromSuperview()
         touchHandler?.detach(from: subview)
     }
-   
+
+    @objc override func didSetProps(_ changedProps: [String]!) {
+        //TODO:
+        let requiresRemount = false
+        self.syncSheetState()
+    }
+    
+    private func syncSheetState() {
+        if(!hasInitialized){ return }
+
+        let shouldBeMounted = (useInlineMode || currentSizeIdx != 0)
+        if(shouldBeMounted){
+            if(!isMounted){ mountSheet() }
+
+            let targetSize = sizes[currentSizeIdx]
+            if(sheetController!.currentSize != targetSize){
+                // we can't differentiate between users changing the size
+                // and us resizing it.. need this flag to prevent
+                // an infinite loop of sizeChange events triggering each other
+                ignoreNextSizeChange = true
+                sheetController!.resize(to: targetSize)
+            }
+        } else if(isMounted){
+            // destroy sheet if state is hidden in modal-mode
+            destroySheet()
+        }
+    }
+    
+    private func mountSheet() {
+        let rvc = self.reactViewController()!
+        if(useInlineMode) {
+            sheetController!.willMove(toParent: rvc)
+            rvc.addChild(sheetController!)
+            rvc.view.addSubview(sheetController!.view)
+            sheetController!.didMove(toParent: rvc)
+            sheetController!.view.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                sheetController!.view.topAnchor.constraint(equalTo: rvc.view.topAnchor),
+                sheetController!.view.bottomAnchor.constraint(equalTo: rvc.view.bottomAnchor),
+                sheetController!.view.leadingAnchor.constraint(equalTo: rvc.view.leadingAnchor),
+                sheetController!.view.trailingAnchor.constraint(equalTo: rvc.view.trailingAnchor)
+            ])
+            sheetController!.animateIn(size: sizes[currentSizeIdx], duration: 0.3)
+        } else {
+            rvc.present(sheetController!, animated: true)
+        }
+        self.isMounted = true
+        self.notifyStateChange(idx: currentSizeIdx)
+    }
+    
+    private func destroySheet() {
+        if(useInlineMode) {
+            sheetController!.animateOut()
+        } else {
+            reactViewController()!.dismiss(animated: true)
+        }
+        self.isMounted = false
+        self.notifyStateChange(idx: 0)
+    }
+    
+    /* Prop setters */
     @objc func setPullBarHeight (_ height: NSNumber) {
         self.pullBarHeight = CGFloat(truncating: height)
     }
@@ -201,7 +276,6 @@ class PullUpView : UIView {
     }
     
     @objc func setUseInlineMode (_ useInlineMode: Bool) {
-        print("set use inline mode \(useInlineMode)")
         self.useInlineMode = useInlineMode
     }
     
@@ -212,13 +286,18 @@ class PullUpView : UIView {
     @objc func setMaxWidth (_ maxWidth: NSNumber) {
         self.maxWidth = CGFloat(truncating: maxWidth)
     }
-    
-    @objc func setSizes (_ sizes: NSArray) {
-        self.sizes = sizes.map({ return calculateSize(size: $0 as! String)})
+
+    @objc func setState (_ state: String) {
+        if let idx = ["hidden","collapsed","expanded"].firstIndex(of: state) {
+            self.currentSizeIdx = idx
+        }
     }
     
-    private func calculateSize (size: String) -> SheetSize {
-        
+    @objc func setSizes (_ sizes: NSArray) {
+        self.sizes = sizes.map({ return stringToSize($0 as! String)})
+    }
+
+    private func stringToSize (_ size: String) -> SheetSize {
         let percentageIndex = size.firstIndex(of: "%")
         let pixelIndex = size.firstIndex(of: Character("p"))
         let marginFromTopIdx = size.firstIndex(of: "^")
@@ -228,7 +307,6 @@ class PullUpView : UIView {
         if(percentageIndex != nil) {
             //Percentage
             guard let percentage = Float(size[..<percentageIndex!]) else { return .percent(0) }
-            print("percentage \(percentage / 100)")
             return .percent(percentage / 100)
         } else if (pixelIndex != nil) {
             //Pixel
@@ -247,10 +325,8 @@ class PullUpView : UIView {
         } else if (intrinsic) {
             return .intrinsic
         }
-
         //Fallback to nothing.
         return .fixed(0)
-        
     }
     
     @objc func setGripSize (_ gripSize: NSDictionary) {
@@ -307,77 +383,8 @@ class PullUpView : UIView {
         self.allowGestureThroughOverlay = allowGestureThroughOverlay
     }
     
-    @objc func setOnSizeChange (_ onSizeChange: @escaping RCTBubblingEventBlock) {
-        self.onSizeChange = onSizeChange
-    }
-    
-    @objc func setShow (_ show: Bool) {
-        self.show = show
-        if(!self.isInit) {
-            self.showIfNecessary()
-        }
-    }
-    
-    @objc override func didSetProps(_ changedProps: [String]!) {
-        let doesNotHaveShowPropChanged = changedProps.firstIndex(of: "show") == nil
-        let hasInlineModeChanged = changedProps.firstIndex(of: "useInlineMode") != nil
-
-        if(!self.isInit && self.show == true && doesNotHaveShowPropChanged) {
-            //use old inline mode if it changed so we can dismiss properly
-            self.hideSheet(inline: hasInlineModeChanged ? !self.useInlineMode : self.useInlineMode)
-            self.assignOptions()
-            self.assignController()
-            self.showSheet(inline: self.useInlineMode)
-        }
-        
-    }
-    
-    private func showIfNecessary () {
-        if(self.show && (self.isShown == false)) {
-            print("show the sheet")
-            self.isShown = true
-            self.assignOptions()
-            self.assignController()
-            showSheet(inline: self.useInlineMode)
-        } else if (!self.show && (self.isShown == true)) {
-            self.isShown = false
-            hideSheet(inline: self.useInlineMode)
-        }
-    }
-    
-    private func showSheet (inline: Bool) {
-        
-        if(inline) {
-            self.sheetController!.willMove(toParent: self.reactViewController())
-            self.reactViewController().addChild(self.sheetController!)
-            self.reactViewController().view.addSubview(self.sheetController!.view)
-            self.sheetController!.didMove(toParent: self.reactViewController())
-
-            self.sheetController!.view.translatesAutoresizingMaskIntoConstraints = false
-            
-            let constraints = [
-                self.sheetController!.view.topAnchor.constraint(equalTo: self.reactViewController().view.topAnchor),
-                self.sheetController!.view.bottomAnchor.constraint(equalTo: self.reactViewController().view.bottomAnchor),
-                self.sheetController!.view.leadingAnchor.constraint(equalTo: self.reactViewController().view.leadingAnchor),
-                self.sheetController!.view.trailingAnchor.constraint(equalTo: self.reactViewController().view.trailingAnchor)
-            ]
-            
-            NSLayoutConstraint.activate(constraints)
-
-            self.sheetController!.animateIn(size: self.sizes[0], duration: 0.3, completion: nil)
-        } else {
-            
-            self.reactViewController().present(self.sheetController!, animated: true)
-            
-        }
-    }
-    
-    private func hideSheet (inline: Bool) {
-        if(inline) {
-            self.sheetController!.animateOut()
-        } else {
-            self.reactViewController()!.dismiss(animated: true, completion: nil)
-        }
+    @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
+        self.onStateChanged = onStateChanged
     }
     
 }
