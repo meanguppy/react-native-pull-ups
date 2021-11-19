@@ -1,0 +1,38 @@
+OVERVIEW:
+  The two primary modes of the bottom sheet are Modal and Persistent.
+  * Persistent mode:
+    * the sheet is always mounted.
+    * can be expanded, collapsed, or hidden (collapsed/hidden optional).
+    * background can be interacted with at all times.
+  * Modal mode:
+    * the sheet is only mounted when visible.
+    * decide whether dismissing is allowed: via swiping down, tapping overlay, or back button.
+    * can be expanded or hidden (hidden only allowed when dismissable). note: collapsed not available
+    * background has a dimmed overlay, cannot be interacted with.
+
+PROPS:
+  * state  (String, required)
+    > Three available states: `hidden | collapsed | expanded`.
+  * height  (String|Number, required)
+    > The fully-expanded height of the sheet.
+  * modal  (Bool, default `false`)
+    > Determines the behavior of the bottom sheet, see below.
+  * onStateChanged  (Func)
+    > Fired when the user changes the sheet state.
+  * inline  (Bool, iOS)
+    > Constrains the sheet within its parent container. Always true on Android, unless modal mode is used.
+
+MODAL ONLY:
+  * dismissable
+    > Whether the modal can be dismissed. This includes swiping the sheet down, tapping the overlay, or the back button (Android).
+  * tapToDismissModal
+    > Whether the background can be tapped to dismiss the modal.
+
+PERSISTENT ONLY:
+  * collapsedHeight  (String|Number)
+    > Enable the `collapsed` state by setting the height. When undefined, it is analogous to `expanded`.
+  * hideable  (Bool, default `true`)
+    > Whether the user can drag the sheet down to hide it. (Note: sheet can always be hidden by setting `state` to `hidden`)
+
+iOS STYLING PROPS:
+  * All the various FittedSheets options.
