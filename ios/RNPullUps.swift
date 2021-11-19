@@ -12,42 +12,45 @@ import FittedSheets
 @objc(PullUpView)
 class PullUpView : UIView {
     
+    /* Internal state */
     var pullUpVc: UIViewController = UIViewController()
     var sheetController: SheetViewController? = nil
     var touchHandler: RCTTouchHandler? = nil
-    var onStateChanged: RCTDirectEventBlock? = nil
-    var currentSizeIdx: Int = 0
     var hasInitialized: Bool = false
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
     var remountRequired: Bool = false
 
+    /* Internal props */
+    var currentSizeIdx: Int = 0 //via `state` prop
+    var allowedSizes: Array<SheetSize> = [.fixed(0), .percent(0.50), .fullscreen]
+    var actualSizes: Array<SheetSize> = [.fixed(0), .percent(0.50), .fullscreen]
+    var useModalMode: Bool = false
+    var onStateChanged: RCTDirectEventBlock? = nil
+
+    /* Configurable props */
+    var tapToDismissModal: Bool = true
+    var useInlineMode: Bool = true
+    var maxWidth: CGFloat? = nil
+
     /* FittedSheets controller */
-    var sizes: Array<SheetSize> = [.percent(0.25), .percent(0.50), .fullscreen]
     var gripSize: CGSize = CGSize(width: 50, height: 6)
     var gripColor: UIColor = UIColor(white: 0.868, alpha: 1)
     var cornerRadius: CGFloat = 20
     var minimumSpaceAbovePullBar: CGFloat = 0
     var pullBarBackgroundColor: UIColor = UIColor.clear
     var treatPullBarAsClear: Bool = false
-    var dismissOnOverlayTap: Bool = false
-    var dismissOnPull: Bool = false
     var allowPullingPastMaxHeight: Bool = false
-    var autoAdjustToKeyboard: Bool = true
     var contentBackgroundColor: UIColor = UIColor.white
     var overlayColor: UIColor = UIColor(white: 0, alpha: 0.25)
-    var allowGestureThroughOverlay: Bool = true
 
     /* FittedSheets options (requires remount) */
     var pullBarHeight: CGFloat = 24
     var presentingViewCornerRadius: CGFloat = 20
     var shouldExtendBackground: Bool = true
-    var setIntrinsicHeightOnNavigationControllers: Bool = false
     var useFullScreenMode: Bool = false
     var shrinkPresentingViewController: Bool = false
-    var useInlineMode: Bool = true
     var horizontalPadding: CGFloat = 0
-    var maxWidth: CGFloat? = nil
 
     init(bridge: RCTBridge){
         super.init(frame: CGRect.zero)
@@ -63,6 +66,7 @@ class PullUpView : UIView {
         if(self.hasInitialized){ return }
 
         self.hasInitialized = true
+        self.remountRequired = false
         self.assignController()
         self.syncSheetState()
     }
@@ -81,7 +85,7 @@ class PullUpView : UIView {
             // Attempts to use intrinsic heights on navigation controllers.
             // This does not work well in combination with
             // keyboards without your code handling it.
-            setIntrinsicHeightOnNavigationControllers: self.setIntrinsicHeightOnNavigationControllers,
+            setIntrinsicHeightOnNavigationControllers: false,
             // Pulls the view controller behind the safe area top,
             // especially useful when embedding navigation controllers
             useFullScreenMode: self.useFullScreenMode,
@@ -100,8 +104,9 @@ class PullUpView : UIView {
         
         let sheetController = SheetViewController(
             controller: self.pullUpVc,
-            sizes: self.sizes,
-            options: sheetOptions)
+            sizes: self.allowedSizes,
+            options: sheetOptions
+        )
         
         // The size of the grip in the pull bar
         sheetController.gripSize = self.gripSize
@@ -125,18 +130,18 @@ class PullUpView : UIView {
         sheetController.treatPullBarAsClear = self.treatPullBarAsClear
         
         // Disable the dismiss on background tap functionality
-        sheetController.dismissOnOverlayTap = self.dismissOnOverlayTap
+        sheetController.dismissOnOverlayTap = self.useModalMode && self.tapToDismissModal
         
         // Disable the ability to pull down to dismiss the modal
-        sheetController.dismissOnPull = self.dismissOnPull
+        // NOTE: We handle this manually when `state` is `hidden`
+        sheetController.dismissOnPull = false
         
         // Allow pulling past the maximum height and bounce back.
         // Defaults to true.
         sheetController.allowPullingPastMaxHeight = self.allowPullingPastMaxHeight
         
         // Automatically grow/move the sheet to accomidate the keyboard.
-        // Defaults to true.
-        sheetController.autoAdjustToKeyboard = self.autoAdjustToKeyboard
+        sheetController.autoAdjustToKeyboard = true
         
         // Color of the sheet anywhere the child view controller may not show (or is transparent),
         // such as behind the keyboard currently
@@ -146,13 +151,11 @@ class PullUpView : UIView {
         sheetController.overlayColor = self.overlayColor
         
         // For inline mode interaction
-        sheetController.allowGestureThroughOverlay = self.allowGestureThroughOverlay
+        sheetController.allowGestureThroughOverlay = !self.useModalMode
         
         sheetController.sizeChanged = self.sizeChanged
-        
         sheetController.didDismiss = self.didDismiss
-        
-        self.sheetController = sheetController;
+        self.sheetController = sheetController
     }
     
     private func sizeChanged (vc: SheetViewController, size: SheetSize, newHeight: CGFloat) {
@@ -160,7 +163,9 @@ class PullUpView : UIView {
             ignoreNextSizeChange = false
             return
         }
-        if let idx = self.sizes.firstIndex(of: size) {
+        // search for lastIndex in case size values are duplicated to disable
+        // certain states from ocurring (hidden/collapsed optional)
+        if let idx = self.actualSizes.lastIndex(of: size) {
             self.notifyStateChange(idx: idx)
         }
     }
@@ -181,13 +186,13 @@ class PullUpView : UIView {
     
     override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
         self.pullUpVc.view.addSubview(subview)
-        touchHandler?.attach(to: subview)
+        touchHandler!.attach(to: subview)
     }
     
     override func removeReactSubview(_ subview: UIView!) {
         super.removeReactSubview(subview)
         subview.removeFromSuperview()
-        touchHandler?.detach(from: subview)
+        touchHandler!.detach(from: subview)
     }
 
     @objc override func didSetProps(_ changedProps: [String]!) {
@@ -202,11 +207,11 @@ class PullUpView : UIView {
     }
     
     private func syncSheetState() {
-        let shouldBeMounted = (useInlineMode || currentSizeIdx != 0)
+        let shouldBeMounted = (!useModalMode || currentSizeIdx != 0)
         if(shouldBeMounted){
             if(!isMounted){ mountSheet() }
 
-            let targetSize = sizes[currentSizeIdx]
+            let targetSize = actualSizes[currentSizeIdx]
             if(sheetController!.currentSize != targetSize){
                 // we can't differentiate between users changing the size
                 // and us resizing it.. need this flag to prevent
@@ -234,7 +239,7 @@ class PullUpView : UIView {
                 sheetController!.view.leadingAnchor.constraint(equalTo: rvc.view.leadingAnchor),
                 sheetController!.view.trailingAnchor.constraint(equalTo: rvc.view.trailingAnchor)
             ])
-            sheetController!.animateIn(size: sizes[currentSizeIdx], duration: 0.3)
+            sheetController!.animateIn(size: actualSizes[currentSizeIdx], duration: 0.3)
         } else {
             rvc.present(sheetController!, animated: true)
         }
@@ -268,11 +273,6 @@ class PullUpView : UIView {
         self.remountRequired = true
     }
     
-    @objc func setSetIntrinsicHeightOnNavigationControllers (_ setIntrinsicHeightOnNavigationControllers: Bool) {
-        self.setIntrinsicHeightOnNavigationControllers = setIntrinsicHeightOnNavigationControllers
-        self.remountRequired = true
-    }
-    
     @objc func setUseFullScreenMode (_ useFullScreenMode: Bool) {
         self.useFullScreenMode = useFullScreenMode
         self.remountRequired = true
@@ -299,9 +299,17 @@ class PullUpView : UIView {
     }
 
     /* Prop setters: FittedSheets controller */
-    @objc func setSizes (_ sizes: NSArray) {
-        self.sizes = sizes.map({ return stringToSize($0 as! String)})
-        sheetController?.sizes = self.sizes
+    @objc func setActualSizes (_ actualSizes: NSArray) {
+        self.actualSizes = actualSizes.map({
+            return .fixed(CGFloat($0 as! Float))
+        })
+    }
+
+    @objc func setAllowedSizes (_ allowedSizes: NSArray) {
+        self.allowedSizes = allowedSizes.map({
+            return .fixed(CGFloat($0 as! Float))
+        })
+        sheetController?.sizes = self.allowedSizes
     }
 
     private func stringToSize (_ size: String) -> SheetSize {
@@ -368,25 +376,9 @@ class PullUpView : UIView {
         sheetController?.treatPullBarAsClear = self.treatPullBarAsClear
     }
     
-    @objc func setDismissOnOverlayTap (_ dismissOnOverlayTap: Bool) {
-        print("DISMISS ON OVERLAY TAP", dismissOnOverlayTap)
-        self.dismissOnOverlayTap = dismissOnOverlayTap
-        sheetController?.dismissOnOverlayTap = self.dismissOnOverlayTap
-    }
-    
-    @objc func setDismissOnPull (_ dismissOnPull: Bool) {
-        self.dismissOnPull = dismissOnPull
-        sheetController?.dismissOnPull = self.dismissOnPull
-    }
-    
     @objc func setAllowPullingPastMaxHeight (_ allowPullingPastMaxHeight: Bool) {
         self.allowPullingPastMaxHeight = allowPullingPastMaxHeight
         sheetController?.allowPullingPastMaxHeight = self.allowPullingPastMaxHeight
-    }
-    
-    @objc func setAutoAdjustToKeyboard (_ autoAdjustToKeyboard: Bool) {
-        self.autoAdjustToKeyboard = autoAdjustToKeyboard
-        sheetController?.autoAdjustToKeyboard = self.autoAdjustToKeyboard
     }
     
     @objc func setContentBackgroundColor (_ contentBackgroundColor: CGColor) {
@@ -398,17 +390,23 @@ class PullUpView : UIView {
         self.overlayColor = UIColor(cgColor: overlayColor)
         sheetController?.overlayColor = self.overlayColor
     }
-    
-    @objc func setAllowGestureThroughOverlay (_ allowGestureThroughOverlay: Bool) {
-        self.allowGestureThroughOverlay = allowGestureThroughOverlay
-        sheetController?.allowGestureThroughOverlay = self.allowGestureThroughOverlay
-    }
 
     /* Prop setters: internal usage */
     @objc func setState (_ state: String) {
         if let idx = ["hidden","collapsed","expanded"].firstIndex(of: state) {
             self.currentSizeIdx = idx
         }
+    }
+
+    @objc func setUseModalMode(_ useModalMode: Bool) {
+        self.useModalMode = useModalMode
+        sheetController?.dismissOnOverlayTap = self.useModalMode && self.tapToDismissModal
+        sheetController?.allowGestureThroughOverlay = !self.useModalMode
+    }
+    
+    @objc func setTapToDismissModal (_ tapToDismissModal: Bool) {
+        self.tapToDismissModal = tapToDismissModal
+        sheetController?.dismissOnOverlayTap = self.useModalMode && self.tapToDismissModal
     }
     
     @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
