@@ -15,22 +15,14 @@ class PullUpView : UIView {
     var pullUpVc: UIViewController = UIViewController()
     var sheetController: SheetViewController? = nil
     var touchHandler: RCTTouchHandler? = nil
+    var onStateChanged: RCTDirectEventBlock? = nil
     var currentSizeIdx: Int = 0
     var hasInitialized: Bool = false
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
+    var remountRequired: Bool = false
 
-    /* FittedSheets options */
-    var sheetOptions: SheetOptions = SheetOptions()
-    var pullBarHeight: CGFloat = 24
-    var presentingViewCornerRadius: CGFloat = 20
-    var shouldExtendBackground: Bool = true
-    var setIntrinsicHeightOnNavigationControllers: Bool = false
-    var useFullScreenMode: Bool = false
-    var shrinkPresentingViewController: Bool = false
-    var useInlineMode: Bool = true
-    var horizontalPadding: CGFloat = 0
-    var maxWidth: CGFloat? = nil
+    /* FittedSheets controller */
     var sizes: Array<SheetSize> = [.percent(0.25), .percent(0.50), .fullscreen]
     var gripSize: CGSize = CGSize(width: 50, height: 6)
     var gripColor: UIColor = UIColor(white: 0.868, alpha: 1)
@@ -45,7 +37,17 @@ class PullUpView : UIView {
     var contentBackgroundColor: UIColor = UIColor.white
     var overlayColor: UIColor = UIColor(white: 0, alpha: 0.25)
     var allowGestureThroughOverlay: Bool = true
-    var onStateChanged: RCTDirectEventBlock? = nil
+
+    /* FittedSheets options (requires remount) */
+    var pullBarHeight: CGFloat = 24
+    var presentingViewCornerRadius: CGFloat = 20
+    var shouldExtendBackground: Bool = true
+    var setIntrinsicHeightOnNavigationControllers: Bool = false
+    var useFullScreenMode: Bool = false
+    var shrinkPresentingViewController: Bool = false
+    var useInlineMode: Bool = true
+    var horizontalPadding: CGFloat = 0
+    var maxWidth: CGFloat? = nil
 
     init(bridge: RCTBridge){
         super.init(frame: CGRect.zero)
@@ -61,13 +63,12 @@ class PullUpView : UIView {
         if(self.hasInitialized){ return }
 
         self.hasInitialized = true
-        self.assignOptions()
         self.assignController()
         self.syncSheetState()
     }
     
-    private func assignOptions () {
-        self.sheetOptions = SheetOptions(
+    private func assignController () {
+        let sheetOptions = SheetOptions(
             // The full height of the pull bar.
             // The presented view controller will treat this
             // area as a safearea inset on the top
@@ -96,9 +97,7 @@ class PullUpView : UIView {
             // This defaults to nil and doesn't limit the width.
             maxWidth: self.maxWidth
         )
-    }
-    
-    private func assignController () {
+        
         let sheetController = SheetViewController(
             controller: self.pullUpVc,
             sizes: self.sizes,
@@ -192,14 +191,17 @@ class PullUpView : UIView {
     }
 
     @objc override func didSetProps(_ changedProps: [String]!) {
-        //TODO:
-        let requiresRemount = false
+        if(!hasInitialized){ return }
+        if(remountRequired){
+            sheetController!.attemptDismiss(animated: false)
+            isMounted = false
+            self.assignController()
+            remountRequired = false
+        }
         self.syncSheetState()
     }
     
     private func syncSheetState() {
-        if(!hasInitialized){ return }
-
         let shouldBeMounted = (useInlineMode || currentSizeIdx != 0)
         if(shouldBeMounted){
             if(!isMounted){ mountSheet() }
@@ -241,60 +243,65 @@ class PullUpView : UIView {
     }
     
     private func destroySheet() {
-        if(useInlineMode) {
-            sheetController!.animateOut()
-        } else {
-            reactViewController()!.dismiss(animated: true)
-        }
+        // if inline,
+        sheetController!.animateOut()
+        // and if modal. do both so we dont have to keep track
+        reactViewController()!.dismiss(animated: true)
+
         self.isMounted = false
         self.notifyStateChange(idx: 0)
     }
-    
-    /* Prop setters */
+
+    /* Prop setters: FittedSheets options */
     @objc func setPullBarHeight (_ height: NSNumber) {
         self.pullBarHeight = CGFloat(truncating: height)
+        self.remountRequired = true
     }
     
     @objc func setPresentingViewCornerRadius (_ radius: NSNumber) {
         self.presentingViewCornerRadius = CGFloat(truncating: radius)
+        self.remountRequired = true
     }
     
     @objc func setShouldExtendBackground (_ shouldExtendBackground: Bool) {
         self.shouldExtendBackground = shouldExtendBackground
+        self.remountRequired = true
     }
     
     @objc func setSetIntrinsicHeightOnNavigationControllers (_ setIntrinsicHeightOnNavigationControllers: Bool) {
         self.setIntrinsicHeightOnNavigationControllers = setIntrinsicHeightOnNavigationControllers
+        self.remountRequired = true
     }
     
     @objc func setUseFullScreenMode (_ useFullScreenMode: Bool) {
         self.useFullScreenMode = useFullScreenMode
+        self.remountRequired = true
     }
     
     @objc func setShrinkPresentingViewController (_ shrinkPresentingViewController: Bool) {
         self.shrinkPresentingViewController = shrinkPresentingViewController
+        self.remountRequired = true
     }
     
     @objc func setUseInlineMode (_ useInlineMode: Bool) {
         self.useInlineMode = useInlineMode
+        self.remountRequired = true
     }
     
     @objc func setHorizontalPadding (_ padding: NSNumber) {
         self.horizontalPadding = CGFloat(truncating: padding)
+        self.remountRequired = true
     }
     
     @objc func setMaxWidth (_ maxWidth: NSNumber) {
         self.maxWidth = CGFloat(truncating: maxWidth)
+        self.remountRequired = true
     }
 
-    @objc func setState (_ state: String) {
-        if let idx = ["hidden","collapsed","expanded"].firstIndex(of: state) {
-            self.currentSizeIdx = idx
-        }
-    }
-    
+    /* Prop setters: FittedSheets controller */
     @objc func setSizes (_ sizes: NSArray) {
         self.sizes = sizes.map({ return stringToSize($0 as! String)})
+        sheetController?.sizes = self.sizes
     }
 
     private func stringToSize (_ size: String) -> SheetSize {
@@ -333,54 +340,75 @@ class PullUpView : UIView {
         let width: Int = Int(gripSize.value(forKey: "width") as! String) ?? 0
         let height: Int = Int(gripSize.value(forKey: "height") as! String) ?? 0
         self.gripSize = CGSize(width: width, height: height)
+        sheetController?.gripSize = self.gripSize
     }
     
     @objc func setGripColor (_ gripColor: CGColor) {
         self.gripColor = UIColor(cgColor: gripColor)
+        sheetController?.gripColor = self.gripColor
     }
     
     @objc func setCornerRadius (_ cornerRadius: NSNumber) {
         self.cornerRadius = CGFloat(truncating: cornerRadius)
+        sheetController?.cornerRadius = self.cornerRadius
     }
     
     @objc func setMinimumSpaceAbovePullBar (_ minimumSpaceAbovePullBar: NSNumber) {
         self.minimumSpaceAbovePullBar = CGFloat(truncating: minimumSpaceAbovePullBar)
+        sheetController?.minimumSpaceAbovePullBar = self.minimumSpaceAbovePullBar
     }
     
     @objc func setPullBarBackgroundColor (_ pullBarBackgroundColor: CGColor) {
         self.pullBarBackgroundColor = UIColor(cgColor: pullBarBackgroundColor)
+        sheetController?.pullBarBackgroundColor = self.pullBarBackgroundColor
     }
     
     @objc func setTreatPullBarAsClear (_ treatPullBarAsClear: Bool) {
         self.treatPullBarAsClear = treatPullBarAsClear
+        sheetController?.treatPullBarAsClear = self.treatPullBarAsClear
     }
     
     @objc func setDismissOnOverlayTap (_ dismissOnOverlayTap: Bool) {
+        print("DISMISS ON OVERLAY TAP", dismissOnOverlayTap)
         self.dismissOnOverlayTap = dismissOnOverlayTap
+        sheetController?.dismissOnOverlayTap = self.dismissOnOverlayTap
     }
     
     @objc func setDismissOnPull (_ dismissOnPull: Bool) {
         self.dismissOnPull = dismissOnPull
+        sheetController?.dismissOnPull = self.dismissOnPull
     }
     
     @objc func setAllowPullingPastMaxHeight (_ allowPullingPastMaxHeight: Bool) {
         self.allowPullingPastMaxHeight = allowPullingPastMaxHeight
+        sheetController?.allowPullingPastMaxHeight = self.allowPullingPastMaxHeight
     }
     
     @objc func setAutoAdjustToKeyboard (_ autoAdjustToKeyboard: Bool) {
         self.autoAdjustToKeyboard = autoAdjustToKeyboard
+        sheetController?.autoAdjustToKeyboard = self.autoAdjustToKeyboard
     }
     
     @objc func setContentBackgroundColor (_ contentBackgroundColor: CGColor) {
         self.contentBackgroundColor = UIColor(cgColor: contentBackgroundColor)
+        sheetController?.contentBackgroundColor = self.contentBackgroundColor
     }
     
     @objc func setOverlayColor (_ overlayColor: CGColor) {
         self.overlayColor = UIColor(cgColor: overlayColor)
+        sheetController?.overlayColor = self.overlayColor
     }
     
     @objc func setAllowGestureThroughOverlay (_ allowGestureThroughOverlay: Bool) {
         self.allowGestureThroughOverlay = allowGestureThroughOverlay
+        sheetController?.allowGestureThroughOverlay = self.allowGestureThroughOverlay
+    }
+
+    /* Prop setters: internal usage */
+    @objc func setState (_ state: String) {
+        if let idx = ["hidden","collapsed","expanded"].firstIndex(of: state) {
+            self.currentSizeIdx = idx
+        }
     }
     
     @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
