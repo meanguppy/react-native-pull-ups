@@ -20,19 +20,16 @@ class PullUpView : UIView {
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
     var remountRequired: Bool = false
-
     /* Internal props */
     var currentSizeIdx: Int = 0 //via `state` prop
     var allowedSizes: Array<SheetSize> = [.fixed(0), .percent(0.50), .fullscreen]
     var actualSizes: Array<SheetSize> = [.fixed(0), .percent(0.50), .fullscreen]
     var useModalMode: Bool = false
     var onStateChanged: RCTDirectEventBlock? = nil
-
-    /* Configurable props */
+    /* FittedSheets props */
     var tapToDismissModal: Bool = true
     var maxWidth: CGFloat? = nil
-
-    /* FittedSheets controller */
+    /* FittedSheets styling (controller) */
     var gripSize: CGSize = CGSize(width: 50, height: 6)
     var gripColor: UIColor = UIColor(white: 0.868, alpha: 1)
     var cornerRadius: CGFloat = 20
@@ -42,8 +39,7 @@ class PullUpView : UIView {
     var allowPullingPastMaxHeight: Bool = false
     var contentBackgroundColor: UIColor = UIColor.white
     var overlayColor: UIColor = UIColor(white: 0, alpha: 0.5)
-
-    /* FittedSheets options (requires remount) */
+    /* FittedSheets styling (options, requires remount) */
     var pullBarHeight: CGFloat = 24
     var presentingViewCornerRadius: CGFloat = 20
     var shouldExtendBackground: Bool = true
@@ -257,63 +253,11 @@ class PullUpView : UIView {
         self.notifyStateChange(idx: 0)
     }
     
-    /* Prop setters: internal usage */
-    @objc func setUseModalMode(_ useModalMode: Bool) {
-        self.useModalMode = useModalMode
-        self.remountRequired = true
-    }
-
+    /* Prop setters */
     @objc func setState (_ state: String) {
         if let idx = ["hidden","collapsed","expanded"].firstIndex(of: state) {
             self.currentSizeIdx = idx
         }
-    }
-    
-    @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
-        self.onStateChanged = onStateChanged
-    }
-
-    /* Prop setters: FittedSheets options */
-    @objc func setPullBarHeight (_ height: NSNumber) {
-        self.pullBarHeight = CGFloat(truncating: height)
-        self.remountRequired = true
-    }
-    
-    @objc func setPresentingViewCornerRadius (_ radius: NSNumber) {
-        self.presentingViewCornerRadius = CGFloat(truncating: radius)
-        self.remountRequired = true
-    }
-    
-    @objc func setShouldExtendBackground (_ shouldExtendBackground: Bool) {
-        self.shouldExtendBackground = shouldExtendBackground
-        self.remountRequired = true
-    }
-    
-    @objc func setUseFullScreenMode (_ useFullScreenMode: Bool) {
-        self.useFullScreenMode = useFullScreenMode
-        self.remountRequired = true
-    }
-    
-    @objc func setShrinkPresentingViewController (_ shrinkPresentingViewController: Bool) {
-        self.shrinkPresentingViewController = shrinkPresentingViewController
-        self.remountRequired = true
-    }
-    
-    @objc func setHorizontalPadding (_ padding: NSNumber) {
-        self.horizontalPadding = CGFloat(truncating: padding)
-        self.remountRequired = true
-    }
-    
-    @objc func setMaxWidth (_ maxWidth: NSNumber) {
-        self.maxWidth = CGFloat(truncating: maxWidth)
-        self.remountRequired = true
-    }
-
-    /* Prop setters: FittedSheets controller */
-    @objc func setActualSizes (_ actualSizes: NSArray) {
-        self.actualSizes = actualSizes.map({
-            return .fixed(CGFloat($0 as! Float))
-        })
     }
 
     @objc func setAllowedSizes (_ allowedSizes: NSArray) {
@@ -322,7 +266,33 @@ class PullUpView : UIView {
         })
         sheetController?.sizes = self.allowedSizes
     }
+    
+    @objc func setActualSizes (_ actualSizes: NSArray) {
+        self.actualSizes = actualSizes.map({
+            return .fixed(CGFloat($0 as! Float))
+        })
+    }
 
+    @objc func setUseModalMode(_ useModalMode: Bool) {
+        self.useModalMode = useModalMode
+        self.remountRequired = true
+    }
+
+    @objc func setTapToDismissModal (_ tapToDismissModal: Bool) {
+        self.tapToDismissModal = tapToDismissModal
+        sheetController?.dismissOnOverlayTap = self.tapToDismissModal
+    }
+    
+    @objc func setMaxWidth (_ maxWidth: NSNumber) {
+        self.maxWidth = CGFloat(truncating: maxWidth)
+        self.remountRequired = true
+    }
+
+    @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
+        self.onStateChanged = onStateChanged
+    }
+    
+    /* Unused, all values are currently handled in `px` */
     private func stringToSize (_ size: String) -> SheetSize {
         let percentageIndex = size.firstIndex(of: "%")
         let pixelIndex = size.firstIndex(of: Character("p"))
@@ -355,57 +325,64 @@ class PullUpView : UIView {
         return .fixed(0)
     }
     
-    @objc func setTapToDismissModal (_ tapToDismissModal: Bool) {
-        self.tapToDismissModal = tapToDismissModal
-        sheetController?.dismissOnOverlayTap = self.tapToDismissModal
+    @objc func updateStyle(json: Any?){
+        guard let config = json as? [String: Any] else { return }
+        print("UPDATE STYLE")
+        for (key, value) in config {
+            switch key {
+            case "pullBarHeight":
+                self.pullBarHeight = CGFloat(truncating: value as! NSNumber)
+                self.remountRequired = true
+            case "presentingViewCornerRadius":
+                self.presentingViewCornerRadius = CGFloat(truncating: value as! NSNumber)
+                self.remountRequired = true
+            case "shouldExtendBackground":
+                self.shouldExtendBackground = value as! Bool
+                self.remountRequired = true
+            case "useFullScreenMode":
+                self.useFullScreenMode = value as! Bool
+                self.remountRequired = true
+            case "shrinkPresentingViewController":
+                self.shrinkPresentingViewController = value as! Bool
+                self.remountRequired = true
+            case "horizontalPadding":
+                self.horizontalPadding = CGFloat(truncating: value as! NSNumber)
+                self.remountRequired = true
+            case "gripSize":
+                let gripSize = value as! [String: NSNumber]
+                let width: Int = Int(truncating: gripSize["width"] ?? 0)
+                let height: Int = Int(truncating: gripSize["height"] ?? 0)
+                self.gripSize = CGSize(width: width, height: height)
+                sheetController?.gripSize = self.gripSize
+            case "gripColor":
+                self.gripColor = UIColor(ciColor: CIColor(string: value as! String))
+                sheetController?.gripColor = self.gripColor
+            case "cornerRadius":
+                self.cornerRadius = CGFloat(truncating: value as! NSNumber)
+                sheetController?.cornerRadius = self.cornerRadius
+            case "minimumSpaceAbovePullBar":
+                self.minimumSpaceAbovePullBar = CGFloat(truncating: value as! NSNumber)
+                sheetController?.minimumSpaceAbovePullBar = self.minimumSpaceAbovePullBar
+            case "pullBarBackgroundColor":
+                self.pullBarBackgroundColor = UIColor(ciColor: CIColor(string: value as! String))
+                sheetController?.pullBarBackgroundColor = self.pullBarBackgroundColor
+            case "treatPullBarAsClear":
+                self.treatPullBarAsClear = value as! Bool
+                sheetController?.treatPullBarAsClear = self.treatPullBarAsClear
+            case "allowPullingPastMaxHeight":
+                self.allowPullingPastMaxHeight = value as! Bool
+                sheetController?.allowPullingPastMaxHeight = self.allowPullingPastMaxHeight
+            case "contentBackgroundColor":
+                self.contentBackgroundColor = UIColor(ciColor: CIColor(string: value as! String))
+                sheetController?.contentBackgroundColor = self.contentBackgroundColor
+            case "overlayColor":
+                self.overlayColor = UIColor(ciColor: CIColor(string: value as! String))
+                sheetController?.overlayColor = self.overlayColor
+            default: return
+            }
+        }
     }
-    
-    @objc func setGripSize (_ gripSize: NSDictionary) {
-        let width: Int = Int(gripSize.value(forKey: "width") as! String) ?? 0
-        let height: Int = Int(gripSize.value(forKey: "height") as! String) ?? 0
-        self.gripSize = CGSize(width: width, height: height)
-        sheetController?.gripSize = self.gripSize
-    }
-    
-    @objc func setGripColor (_ gripColor: CGColor) {
-        self.gripColor = UIColor(cgColor: gripColor)
-        sheetController?.gripColor = self.gripColor
-    }
-    
-    @objc func setCornerRadius (_ cornerRadius: NSNumber) {
-        self.cornerRadius = CGFloat(truncating: cornerRadius)
-        sheetController?.cornerRadius = self.cornerRadius
-    }
-    
-    @objc func setMinimumSpaceAbovePullBar (_ minimumSpaceAbovePullBar: NSNumber) {
-        self.minimumSpaceAbovePullBar = CGFloat(truncating: minimumSpaceAbovePullBar)
-        sheetController?.minimumSpaceAbovePullBar = self.minimumSpaceAbovePullBar
-    }
-    
-    @objc func setPullBarBackgroundColor (_ pullBarBackgroundColor: CGColor) {
-        self.pullBarBackgroundColor = UIColor(cgColor: pullBarBackgroundColor)
-        sheetController?.pullBarBackgroundColor = self.pullBarBackgroundColor
-    }
-    
-    @objc func setTreatPullBarAsClear (_ treatPullBarAsClear: Bool) {
-        self.treatPullBarAsClear = treatPullBarAsClear
-        sheetController?.treatPullBarAsClear = self.treatPullBarAsClear
-    }
-    
-    @objc func setAllowPullingPastMaxHeight (_ allowPullingPastMaxHeight: Bool) {
-        self.allowPullingPastMaxHeight = allowPullingPastMaxHeight
-        sheetController?.allowPullingPastMaxHeight = self.allowPullingPastMaxHeight
-    }
-    
-    @objc func setContentBackgroundColor (_ contentBackgroundColor: CGColor) {
-        self.contentBackgroundColor = UIColor(cgColor: contentBackgroundColor)
-        sheetController?.contentBackgroundColor = self.contentBackgroundColor
-    }
-    
-    @objc func setOverlayColor (_ overlayColor: CGColor) {
-        self.overlayColor = UIColor(cgColor: overlayColor)
-        sheetController?.overlayColor = self.overlayColor
-    }
+
 }
 
 

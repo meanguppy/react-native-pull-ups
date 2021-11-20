@@ -50,7 +50,7 @@ function makeSizes({ height, collapsedHeight, modal, dismissable, hideable }){
 }
 
 const PullUp = (props) => {
-  const { state, children, modal, tapToDismissModal, onStateChanged } = props;
+  const { state, children, modal, tapToDismissModal, iosStyling, onStateChanged } = props;
 
   const onNativeStateChanged = useCallback((evt) => {
     const { state: newState } = evt.nativeEvent;
@@ -68,7 +68,7 @@ const PullUp = (props) => {
       useModalMode={modal}
       tapToDismissModal={tapToDismissModal}
       onStateChanged={onNativeStateChanged}
-      iosStyling={{ hello: 1, world: 2 }}
+      iosStyling={iosStyling}
     >{ children }</NativePullUp>
   );
 };

@@ -1,5 +1,10 @@
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import <React/RCTViewManager.h>
+
+@interface PullUpView : UIView
+-(void) updateStyleWithJson:id;
+@end
 
 @interface RCT_EXTERN_MODULE(RNPullUpView, RCTViewManager)
 RCT_EXPORT_VIEW_PROPERTY(state, NSString);
@@ -9,12 +14,9 @@ RCT_EXPORT_VIEW_PROPERTY(useModalMode, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(tapToDismissModal, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(maxWidth, NSNumber);
 RCT_EXPORT_VIEW_PROPERTY(onStateChanged, RCTDirectEventBlock);
-
-//RCT_CUSTOM_VIEW_PROPERTY(iosStyling, NSDictionary, RNPullUpView){
-//  [json enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-//		[view updateStyleWithProp:key value:obj]
-//  }];
-//}
+RCT_CUSTOM_VIEW_PROPERTY(iosStyling, NSDictionary, PullUpView){
+	[view updateStyleWithJson:json];
+};
 
 //RCT_EXPORT_VIEW_PROPERTY(gripSize, NSDictionary);
 //RCT_EXPORT_VIEW_PROPERTY(gripColor, CGColor);
