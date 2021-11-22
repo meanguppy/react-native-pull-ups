@@ -7,8 +7,12 @@ import {
   requireNativeComponent,
 } from 'react-native';
 import CustomAndroidModal from './CustomAndroidModal';
-import type { PullUpProps } from './types';
-import { PullUpPropTypes, PullUpDefaultProps } from './types';
+import {
+  PullUpProps,
+  SheetState,
+  PullUpPropTypes,
+  PullUpDefaultProps,
+} from './types';
 
 const NativePullUp = requireNativeComponent('RNPullUpView');
 
@@ -32,7 +36,7 @@ const styles = StyleSheet.create({
 });
 
 const PullUpBase = (props: PullUpProps) => {
-  const { style, children, onStateChanged, ...rest } = props;
+  const { children, onStateChanged, ...rest } = props;
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
@@ -47,7 +51,7 @@ const PullUpBase = (props: PullUpProps) => {
 
   return (
     <NativePullUp {...rest} style={[styles.primary]}>
-      <View style={[styles.sheet, style]}>{children}</View>
+      <View style={[styles.sheet]}>{children}</View>
     </NativePullUp>
   );
 };
@@ -66,7 +70,7 @@ const PullUpModal = (props: PullUpProps) => {
       <TouchableWithoutFeedback onPress={() => onStateChanged?.('hidden')}>
         <View style={styles.flex} />
       </TouchableWithoutFeedback>
-      <PullUpBase {...props} collapsible={false} state={forceState} />
+      <PullUpBase {...props} collapsedHeight={undefined} state={forceState} />
     </CustomAndroidModal>
   );
 };
@@ -78,3 +82,4 @@ PullUp.propTypes = PullUpPropTypes;
 PullUp.defaultProps = PullUpDefaultProps;
 
 export default PullUp;
+export { PullUpProps, SheetState };

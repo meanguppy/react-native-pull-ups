@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Button } from 'react-native';
-import PullUp, { BottomSheetState } from 'react-native-pull-ups';
+import PullUp, { SheetState } from 'react-native-pull-ups';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
@@ -27,17 +27,17 @@ function PullUpContent() {
 }
 
 function ContentView() {
-  const [bottomSheetState, setBottomSheetState] = useState<BottomSheetState>(
-    'collapsed'
-  );
+  const [bottomSheetState, setBottomSheetState] =
+    useState<SheetState>('collapsed');
+  const [useModal, setUseModal] = useState(false);
 
   const renderBackground = () =>
     new Array(100)
       .fill('')
       .map((_, i) => <Text key={`bg-${i}`}>Background {i}</Text>);
 
-  const onSheetChanged = useCallback((newState: BottomSheetState) => {
-    console.log(newState);
+  const onSheetChanged = useCallback((newState: SheetState) => {
+    console.log('state changed:', newState);
     setBottomSheetState(newState);
   }, []);
 
@@ -50,6 +50,7 @@ function ContentView() {
     <View style={{ flex: 1 }}>
       <ScrollView>
         <Button title="Toggle" onPress={onPress} />
+        <Button title="Toggle modal" onPress={() => setUseModal(!useModal)} />
         {renderBackground()}
         <TouchableOpacity
           style={{ width: '100%', height: 200, backgroundColor: 'green' }}
@@ -57,12 +58,10 @@ function ContentView() {
       </ScrollView>
       <View style={{ bottom: 0, height: 64, backgroundColor: 'orange' }} />
       <PullUp
-        modal
+        modal={useModal}
         state={bottomSheetState}
-        peekHeight={120}
-        collapsible={true}
-        onRequestClose={() => setBottomSheetState('hidden')}
-        onSheetStateChanged={onSheetChanged}
+        collapsedHeight={120}
+        onStateChanged={onSheetChanged}
       >
         <PullUpContent />
       </PullUp>

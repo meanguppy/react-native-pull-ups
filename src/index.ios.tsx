@@ -1,7 +1,11 @@
 import React, { useCallback } from 'react';
 import { View, StyleSheet, requireNativeComponent } from 'react-native';
-import type { PullUpProps } from './types';
-import { PullUpPropTypes, PullUpDefaultProps } from './types';
+import {
+  PullUpProps,
+  SheetState,
+  PullUpPropTypes,
+  PullUpDefaultProps,
+} from './types';
 
 const NativePullUp = requireNativeComponent('RNPullUpView');
 
@@ -54,3 +58,4 @@ PullUp.propTypes = PullUpPropTypes;
 PullUp.defaultProps = PullUpDefaultProps;
 
 export default PullUp;
+export { PullUpProps, SheetState };
