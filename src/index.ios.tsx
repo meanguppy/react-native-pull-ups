@@ -71,6 +71,7 @@ const PullUp = (props: PullUpProps) => {
     <NativePullUp
       {...props}
       style={styles.primary}
+      collapsedHeight={modal ? 0 : collapsedHeight}
       collapsible={!!collapsedHeight && !modal}
       hideable={hideable && (!modal || dismissable)}
       tapToDismissModal={dismissable && tapToDismissModal}
