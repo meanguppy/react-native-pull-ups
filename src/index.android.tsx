@@ -18,10 +18,16 @@ import {
 
 /* Props for Native Android component.
  * Not to be confused with the main component. */
-interface NativeProps extends ViewProps {}
+interface NativeProps extends ViewProps {
+  state: SheetState;
+  collapsedHeight?: number;
+  maxSheetWidth?: number;
+  hideable?: boolean;
+}
 
-const NativePullUp: HostComponent<NativeProps> =
-  requireNativeComponent('RNPullUpView');
+const NativePullUp: HostComponent<NativeProps> = requireNativeComponent(
+  'RNPullUpView'
+);
 
 const styles = StyleSheet.create({
   primary: {
@@ -43,7 +49,7 @@ const styles = StyleSheet.create({
 });
 
 const PullUpBase = (props: PullUpProps) => {
-  const { children, onStateChanged, ...rest } = props;
+  const { maxSheetWidth, style, onStateChanged, children } = props;
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
@@ -56,28 +62,48 @@ const PullUpBase = (props: PullUpProps) => {
     return () => subscription.remove();
   }, [onStateChanged]);
 
+  const maxWidthStyle =
+    typeof maxSheetWidth === 'number' && maxSheetWidth > 0
+      ? { maxWidth: maxSheetWidth }
+      : null;
+
   return (
-    <NativePullUp {...rest} style={[styles.primary]}>
-      <View style={[styles.sheet]}>{children}</View>
+    <NativePullUp {...props} style={styles.primary}>
+      <View style={[styles.sheet, style, maxWidthStyle]}>{children}</View>
     </NativePullUp>
   );
 };
 
 const PullUpModal = (props: PullUpProps) => {
-  const { state, onStateChanged } = props;
+  const {
+    state,
+    hideable,
+    dismissable,
+    tapToDismissModal,
+    onStateChanged,
+  } = props;
   if (state === 'hidden') return null;
 
-  const forceState = state === 'collapsed' ? 'expanded' : state;
+  function onRequestClose() {
+    if (dismissable) onStateChanged?.('hidden');
+  }
+
+  function onPressOverlay() {
+    if (dismissable && tapToDismissModal) {
+      onStateChanged?.('hidden');
+    }
+  }
 
   return (
-    <CustomAndroidModal
-      onRequestClose={() => onStateChanged?.('hidden')}
-      animationType="slide"
-    >
-      <TouchableWithoutFeedback onPress={() => onStateChanged?.('hidden')}>
+    <CustomAndroidModal animationType="slide" onRequestClose={onRequestClose}>
+      <TouchableWithoutFeedback onPress={onPressOverlay}>
         <View style={styles.flex} />
       </TouchableWithoutFeedback>
-      <PullUpBase {...props} collapsedHeight={undefined} state={forceState} />
+      <PullUpBase
+        {...props}
+        hideable={hideable && dismissable}
+        collapsedHeight={0}
+      />
     </CustomAndroidModal>
   );
 };

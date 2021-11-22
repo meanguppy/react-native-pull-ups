@@ -41,11 +41,13 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
           updateState(matchState(newState))
         }
       })
+      // virtually disables 'third' breakpoint
       setHalfExpandedRatio(0.9999999f)
       setFitToContents(true)
       setHideable(true)
-      setSkipCollapsed(false)
-      setPeekHeight(PixelUtil.toPixelFromDIP(120.0).toInt())
+      // default to no collapsed state
+      setSkipCollapsed(true)
+      setPeekHeight(Integer.MAX_VALUE)
     }
     return view
   }
@@ -55,24 +57,38 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     behavior.setHideable(hideable)
   }
 
-  @ReactProp(name = "collapsible")
-  fun setCollapsible(parent: CoordinatorLayout, collapsible: Boolean){
-    behavior.setSkipCollapsed(!collapsible)
-  }
-
-  @ReactProp(name = "peekHeight")
-  fun setPeekHeight(parent: CoordinatorLayout, height: Double){
-    behavior.setPeekHeight(PixelUtil.toPixelFromDIP(height).toInt())
+  @ReactProp(name = "collapsedHeight")
+  fun setCollapsedHeight(parent: CoordinatorLayout, height: Double){
+    var isValidHeight = (height > 0.0)
+    behavior.setSkipCollapsed(!isValidHeight)
+    behavior.setPeekHeight(
+      if(isValidHeight) PixelUtil.toPixelFromDIP(height).toInt()
+      else Integer.MAX_VALUE
+    )
   }
 
   @ReactProp(name = "state")
   fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
     matchState(stateStr!!)?.let {
       if(behavior.state != it.nativeState){
+        // We want to allow hiding programmatically, even if
+        // the hideable prop is set to false. Temporarily enable
+        // and restore the actual value.
+        var hideable = behavior.isHideable()
+        behavior.setHideable(true)
         behavior.state = it.nativeState
+        behavior.setHideable(hideable)
       }
       updateState(it)
     }
+  }
+
+  @ReactProp(name = "maxSheetWidth")
+  fun setMaxWidth(parent: CoordinatorLayout, maxWidth: Double){
+    behavior.setMaxWidth(
+      if(maxWidth <= 0.0) -1
+      else PixelUtil.toPixelFromDIP(maxWidth).toInt()
+    )
   }
 
   private fun matchState(sheetState: Int) = when (sheetState) {
