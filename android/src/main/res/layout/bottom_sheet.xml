@@ -6,6 +6,7 @@
 
   <RelativeLayout
       android:id="@+id/contents"
+      android:layout_gravity="center_horizontal"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
       app:layout_behavior="@string/bottom_sheet_behavior"/>
