@@ -85,7 +85,6 @@ class PullUpView: UIView {
     var shouldExtendBackground: Bool = true
     var useFullScreenMode: Bool = false
     var shrinkPresentingViewController: Bool = false
-    var horizontalPadding: CGFloat = 0
 
     init(bridge: RCTBridge){
         self.bridge = bridge
@@ -133,7 +132,7 @@ class PullUpView: UIView {
             useInlineMode: !self.modal,
             // Adds a padding on the left and right of the
             // sheet with this amount. Defaults to zero (no padding)
-            horizontalPadding: self.horizontalPadding,
+            horizontalPadding: 0,
             // Sets the maximum width allowed for the sheet.
             // This defaults to nil and doesn't limit the width.
             maxWidth: self.maxWidth
@@ -206,7 +205,7 @@ class PullUpView: UIView {
             self.notifyStateChange(idx: idx)
         }
     }
-    
+
     private func didDismiss (vc: SheetViewController) {
         self.isMounted = false
         self.notifyStateChange(idx: 0)
@@ -358,9 +357,6 @@ class PullUpView: UIView {
                 self.remountRequired = true
             case "shrinkPresentingViewController":
                 self.shrinkPresentingViewController = value as! Bool
-                self.remountRequired = true
-            case "horizontalPadding":
-                self.horizontalPadding = CGFloat(truncating: value as! NSNumber)
                 self.remountRequired = true
             case "gripSize":
                 let gripSize = value as! [String: NSNumber]

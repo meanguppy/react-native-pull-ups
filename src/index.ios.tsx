@@ -1,25 +1,7 @@
-import type { PullUpProps } from './index';
 import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
 import { View, StyleSheet, requireNativeComponent } from 'react-native';
-
-const propTypes = {
-  state: PropTypes.oneOf(['hidden','collapsed','expanded']).isRequired,
-  collapsedHeight: PropTypes.number,
-  maxWidth: PropTypes.number,
-  modal: PropTypes.bool,
-  hideable: PropTypes.bool,
-  dismissable: PropTypes.bool,
-  tapToDismissModal: PropTypes.bool,
-  onStateChanged: PropTypes.func,
-  iosStyling: PropTypes.object,
-};
-const defaultProps = {
-  modal: false,
-  hideable: true,
-  dismissable: true,
-  tapToDismissModal: true,
-};
+import type { PullUpProps } from './types';
+import { PullUpPropTypes, PullUpDefaultProps } from './types';
 
 const NativePullUp = requireNativeComponent('RNPullUpView');
 
@@ -27,7 +9,7 @@ const styles = StyleSheet.create({
   primary: {
     position: 'absolute',
     left: -1000000,
-  }
+  },
 });
 
 const PullUp = ({
@@ -42,11 +24,13 @@ const PullUp = ({
   onStateChanged,
   children,
 }: PullUpProps) => {
-
-  const onNativeStateChanged = useCallback((evt) => {
-    const { state: newState } = evt.nativeEvent;
-    onStateChanged?.(newState);
-  }, [onStateChanged]);
+  const onNativeStateChanged = useCallback(
+    (evt) => {
+      const { state: newState } = evt.nativeEvent;
+      onStateChanged?.(newState);
+    },
+    [onStateChanged]
+  );
 
   return (
     <NativePullUp
@@ -61,12 +45,12 @@ const PullUp = ({
       onStateChanged={onNativeStateChanged}
       iosStyling={iosStyling}
     >
-      <View>{ children }</View>
+      <View>{children}</View>
     </NativePullUp>
   );
 };
 
-PullUp.propTypes = propTypes;
-PullUp.defaultProps = defaultProps;
+PullUp.propTypes = PullUpPropTypes;
+PullUp.defaultProps = PullUpDefaultProps;
 
 export default PullUp;
