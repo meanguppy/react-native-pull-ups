@@ -48,8 +48,6 @@ export const PullUpPropTypes = {
 };
 
 export const PullUpDefaultProps = {
-  collapsedHeight: -1,
-  maxSheetWidth: -1,
   modal: false,
   hideable: true,
   dismissable: true,

@@ -25,9 +25,8 @@ interface NativeProps extends ViewProps {
   hideable?: boolean;
 }
 
-const NativePullUp: HostComponent<NativeProps> = requireNativeComponent(
-  'RNPullUpView'
-);
+const NativePullUp: HostComponent<NativeProps> =
+  requireNativeComponent('RNPullUpView');
 
 const styles = StyleSheet.create({
   primary: {
@@ -49,7 +48,8 @@ const styles = StyleSheet.create({
 });
 
 const PullUpBase = (props: PullUpProps) => {
-  const { maxSheetWidth, style, onStateChanged, children } = props;
+  const { collapsedHeight, maxSheetWidth, onStateChanged, style, children } =
+    props;
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
@@ -68,7 +68,12 @@ const PullUpBase = (props: PullUpProps) => {
       : null;
 
   return (
-    <NativePullUp {...props} style={styles.primary}>
+    <NativePullUp
+      {...props}
+      style={styles.primary}
+      collapsedHeight={collapsedHeight || 0}
+      maxSheetWidth={maxSheetWidth || 0}
+    >
       <View collapsable={false} style={[styles.sheet, style, maxWidthStyle]}>
         {children}
       </View>
@@ -77,13 +82,8 @@ const PullUpBase = (props: PullUpProps) => {
 };
 
 const PullUpModal = (props: PullUpProps) => {
-  const {
-    state,
-    hideable,
-    dismissable,
-    tapToDismissModal,
-    onStateChanged,
-  } = props;
+  const { state, hideable, dismissable, tapToDismissModal, onStateChanged } =
+    props;
   if (state === 'hidden') return null;
 
   function onRequestClose() {
@@ -101,11 +101,7 @@ const PullUpModal = (props: PullUpProps) => {
       <TouchableWithoutFeedback onPress={onPressOverlay}>
         <View style={styles.flex} />
       </TouchableWithoutFeedback>
-      <PullUpBase
-        {...props}
-        hideable={hideable && dismissable}
-        collapsedHeight={0}
-      />
+      <PullUpBase {...props} hideable={hideable && dismissable} />
     </CustomAndroidModal>
   );
 };

@@ -63,7 +63,6 @@ class PullUpView: UIView {
     var currentSizeIdx: Int = 0 //via `state` prop
     var actualSizes: Array<SheetSize> = [ .fixed(0), .intrinsic, .intrinsic]
     var hideable: Bool = true
-    var collapsible: Bool = true
     var modal: Bool = false
     var onStateChanged: RCTDirectEventBlock? = nil
     /* FittedSheets props */
@@ -252,7 +251,6 @@ class PullUpView: UIView {
 
             // ensure available sheet sizes are up-to-date
             var clone = actualSizes
-            if(!collapsible){ clone[1] = .intrinsic }
             if(!hideable){ clone[0] = clone[1] }
             sheetController?.sizes = clone
 
@@ -324,10 +322,6 @@ class PullUpView: UIView {
     @objc func setModal(_ useModal: Bool) {
         self.modal = useModal
         self.remountRequired = true
-    }
-
-    @objc func setCollapsible (_ collapsible: Bool) {
-        self.collapsible = collapsible
     }
 
     @objc func setHideable (_ hideable: Bool) {

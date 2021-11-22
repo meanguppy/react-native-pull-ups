@@ -22,16 +22,14 @@ interface NativeProps extends ViewProps {
   collapsedHeight?: number;
   maxSheetWidth?: number;
   modal?: boolean;
-  collapsible?: boolean;
   hideable?: boolean;
   tapToDismissModal?: boolean;
   onStateChanged: (evt: NativeSyntheticEvent<{ state: SheetState }>) => void;
   iosStyling?: IOSStyling;
 }
 
-const NativePullUp: HostComponent<NativeProps> = requireNativeComponent(
-  'RNPullUpView'
-);
+const NativePullUp: HostComponent<NativeProps> =
+  requireNativeComponent('RNPullUpView');
 
 const styles = StyleSheet.create({
   primary: {
@@ -50,6 +48,7 @@ const styles = StyleSheet.create({
 const PullUp = (props: PullUpProps) => {
   const {
     collapsedHeight,
+    maxSheetWidth,
     modal,
     hideable,
     dismissable,
@@ -71,8 +70,8 @@ const PullUp = (props: PullUpProps) => {
     <NativePullUp
       {...props}
       style={styles.primary}
-      collapsedHeight={modal ? 0 : collapsedHeight}
-      collapsible={!!collapsedHeight && !modal}
+      collapsedHeight={collapsedHeight || 0}
+      maxSheetWidth={maxSheetWidth || 0}
       hideable={hideable && (!modal || dismissable)}
       tapToDismissModal={dismissable && tapToDismissModal}
       onStateChanged={onNativeStateChanged}
