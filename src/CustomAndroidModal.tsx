@@ -20,7 +20,7 @@ function fixInnerViewStyling(target: any) {
 }
 
 export default class CustomModal extends Modal {
-  render() {
+  render(): React.ReactNode {
     const result = super.render();
     fixInnerViewStyling(result);
     return result;
