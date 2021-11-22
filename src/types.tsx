@@ -30,7 +30,7 @@ export type PullUpProps = {
   tapToDismissModal?: boolean;
   onStateChanged: (newState: SheetState) => void;
   iosStyling?: IOSStyling;
-  style: ViewStyle;
+  style?: ViewStyle;
   children?: React.ReactNode;
 };
 

@@ -72,12 +72,12 @@ class PullUpView: UIView {
     /* FittedSheets styling (controller) */
     var gripSize: CGSize = CGSize(width: 50, height: 6)
     var gripColor: UIColor = UIColor(white: 0.868, alpha: 1)
-    var cornerRadius: CGFloat = 20
+    var cornerRadius: CGFloat = 0
     var minimumSpaceAbovePullBar: CGFloat = 0
     var pullBarBackgroundColor: UIColor = UIColor.clear
     var treatPullBarAsClear: Bool = false
     var allowPullingPastMaxHeight: Bool = false
-    var contentBackgroundColor: UIColor = UIColor.white
+    var contentBackgroundColor: UIColor = UIColor.clear
     var overlayColor: UIColor = UIColor(white: 0, alpha: 0.5)
     /* FittedSheets styling (options, requires remount) */
     var pullBarHeight: CGFloat = 24
@@ -151,6 +151,8 @@ class PullUpView: UIView {
         sheetController.gripColor = self.gripColor
         
         // The corner radius of the sheet
+        // NOTE: by default it is 0, but ReactNative uses border-radius: 20
+        // We leave it configurable here in-case it causes issues with other options
         sheetController.cornerRadius = self.cornerRadius
         
         // minimum distance above the pull bar,
@@ -181,7 +183,7 @@ class PullUpView: UIView {
         
         // Color of the sheet anywhere the child view controller may not show (or is transparent),
         // such as behind the keyboard currently
-        sheetController.contentBackgroundColor = self.contentBackgroundColor
+        sheetController.contentBackgroundColor = UIColor.clear
         
         // Change the overlay color
         sheetController.overlayColor = self.modal ? self.overlayColor : UIColor.clear
@@ -309,11 +311,13 @@ class PullUpView: UIView {
     }
 
     @objc func setCollapsedHeight (_ collapsedHeight: NSNumber) {
-        actualSizes[1] = .fixed(CGFloat(truncating: collapsedHeight))
+        let val = CGFloat(truncating: collapsedHeight)
+        self.actualSizes[1] = val > 0 ? .fixed(val) : .intrinsic
     }
     
-    @objc func setMaxWidth (_ maxWidth: NSNumber) {
-        self.maxWidth = CGFloat(truncating: maxWidth)
+    @objc func setMaxSheetWidth (_ maxSheetWidth: NSNumber) {
+        let val = CGFloat(truncating: maxSheetWidth)
+        self.maxWidth = val > 0 ? val : nil
         self.remountRequired = true
     }
 

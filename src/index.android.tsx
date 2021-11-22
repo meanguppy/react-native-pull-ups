@@ -25,9 +25,8 @@ interface NativeProps extends ViewProps {
   hideable?: boolean;
 }
 
-const NativePullUp: HostComponent<NativeProps> = requireNativeComponent(
-  'RNPullUpView'
-);
+const NativePullUp: HostComponent<NativeProps> =
+  requireNativeComponent('RNPullUpView');
 
 const styles = StyleSheet.create({
   primary: {
@@ -75,13 +74,8 @@ const PullUpBase = (props: PullUpProps) => {
 };
 
 const PullUpModal = (props: PullUpProps) => {
-  const {
-    state,
-    hideable,
-    dismissable,
-    tapToDismissModal,
-    onStateChanged,
-  } = props;
+  const { state, hideable, dismissable, tapToDismissModal, onStateChanged } =
+    props;
   if (state === 'hidden') return null;
 
   function onRequestClose() {

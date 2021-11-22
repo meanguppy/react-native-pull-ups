@@ -29,29 +29,35 @@ interface NativeProps extends ViewProps {
   iosStyling?: IOSStyling;
 }
 
-const NativePullUp: HostComponent<NativeProps> = requireNativeComponent(
-  'RNPullUpView'
-);
+const NativePullUp: HostComponent<NativeProps> =
+  requireNativeComponent('RNPullUpView');
 
 const styles = StyleSheet.create({
   primary: {
     position: 'absolute',
     left: -1000000,
   },
+  sheet: {
+    flex: 1,
+    backgroundColor: 'white',
+    // emulate FittedSheets cornerRadius, for better customization
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
+  },
 });
 
-const PullUp = ({
-  state,
-  collapsedHeight,
-  maxSheetWidth,
-  modal,
-  hideable,
-  dismissable,
-  tapToDismissModal,
-  iosStyling,
-  onStateChanged,
-  children,
-}: PullUpProps) => {
+const PullUp = (props: PullUpProps) => {
+  const {
+    collapsedHeight,
+    modal,
+    hideable,
+    dismissable,
+    tapToDismissModal,
+    onStateChanged,
+    children,
+    style,
+  } = props;
+
   const onNativeStateChanged = useCallback(
     (evt: NativeSyntheticEvent<{ state: SheetState }>) => {
       const { state: newState } = evt.nativeEvent;
@@ -62,18 +68,14 @@ const PullUp = ({
 
   return (
     <NativePullUp
+      {...props}
       style={styles.primary}
-      state={state}
-      collapsedHeight={collapsedHeight}
-      maxSheetWidth={maxSheetWidth}
-      modal={modal}
       collapsible={!!collapsedHeight && !modal}
       hideable={hideable && (!modal || dismissable)}
       tapToDismissModal={dismissable && tapToDismissModal}
       onStateChanged={onNativeStateChanged}
-      iosStyling={iosStyling}
     >
-      <View>{children}</View>
+      <View style={[styles.sheet, style]}>{children}</View>
     </NativePullUp>
   );
 };
