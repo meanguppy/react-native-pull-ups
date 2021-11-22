@@ -1,4 +1,4 @@
-import type { ViewStyle } from 'react-native';
+import type { ViewStyle, ColorValue } from 'react-native';
 import PropTypes from 'prop-types';
 
 export type SheetState = 'hidden' | 'collapsed' | 'expanded';
@@ -10,14 +10,14 @@ export type IOSStyling = {
   useFullScreenMode?: boolean;
   shrinkPresentingViewController?: boolean;
   gripSize?: { width: number; height: number };
-  gripColor?: string;
+  gripColor?: ColorValue;
   cornerRadius?: number;
   minimumSpaceAbovePullBar?: number;
-  pullBarBackgroundColor?: string;
+  pullBarBackgroundColor?: ColorValue;
   treatPullBarAsClear?: boolean;
   allowPullingPastMaxHeight?: boolean;
-  contentBackgroundColor?: string;
-  overlayColor?: string;
+  contentBackgroundColor?: ColorValue;
+  overlayColor?: ColorValue;
 };
 
 export type PullUpProps = {

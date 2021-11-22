@@ -102,7 +102,7 @@ function ContentView() {
         dismissable={true}
         tapToDismissModal={true}
         onStateChanged={onSheetChanged}
-        iosStyling={{ overlayColor: '0 0 0 0.5' }}
+        iosStyling={{ overlayColor: 'rgba(0,0,0,0.5)' }}
         style={styles.sheet}
       >
         <PullUpContent />

@@ -342,19 +342,19 @@ class PullUpView: UIView {
         for (key, value) in config {
             switch key {
             case "pullBarHeight":
-                self.pullBarHeight = CGFloat(truncating: value as! NSNumber)
+                self.pullBarHeight = RCTConvert.cgFloat(value)
                 self.remountRequired = true
             case "presentingViewCornerRadius":
-                self.presentingViewCornerRadius = CGFloat(truncating: value as! NSNumber)
+                self.presentingViewCornerRadius = RCTConvert.cgFloat(value)
                 self.remountRequired = true
             case "shouldExtendBackground":
-                self.shouldExtendBackground = value as! Bool
+                self.shouldExtendBackground = RCTConvert.bool(value)
                 self.remountRequired = true
             case "useFullScreenMode":
-                self.useFullScreenMode = value as! Bool
+                self.useFullScreenMode = RCTConvert.bool(value)
                 self.remountRequired = true
             case "shrinkPresentingViewController":
-                self.shrinkPresentingViewController = value as! Bool
+                self.shrinkPresentingViewController = RCTConvert.bool(value)
                 self.remountRequired = true
             case "gripSize":
                 let gripSize = value as! [String: NSNumber]
@@ -363,28 +363,28 @@ class PullUpView: UIView {
                 self.gripSize = CGSize(width: width, height: height)
                 sheetController?.gripSize = self.gripSize
             case "gripColor":
-                self.gripColor = UIColor(ciColor: CIColor(string: value as! String))
+                self.gripColor = RCTConvert.uiColor(value)
                 sheetController?.gripColor = self.gripColor
             case "cornerRadius":
-                self.cornerRadius = CGFloat(truncating: value as! NSNumber)
+                self.cornerRadius = RCTConvert.cgFloat(value)
                 sheetController?.cornerRadius = self.cornerRadius
             case "minimumSpaceAbovePullBar":
-                self.minimumSpaceAbovePullBar = CGFloat(truncating: value as! NSNumber)
+                self.minimumSpaceAbovePullBar = RCTConvert.cgFloat(value)
                 sheetController?.minimumSpaceAbovePullBar = self.minimumSpaceAbovePullBar
             case "pullBarBackgroundColor":
-                self.pullBarBackgroundColor = UIColor(ciColor: CIColor(string: value as! String))
+                self.pullBarBackgroundColor = RCTConvert.uiColor(value)
                 sheetController?.pullBarBackgroundColor = self.pullBarBackgroundColor
             case "treatPullBarAsClear":
-                self.treatPullBarAsClear = value as! Bool
+                self.treatPullBarAsClear = RCTConvert.bool(value)
                 sheetController?.treatPullBarAsClear = self.treatPullBarAsClear
             case "allowPullingPastMaxHeight":
-                self.allowPullingPastMaxHeight = value as! Bool
+                self.allowPullingPastMaxHeight = RCTConvert.bool(value)
                 sheetController?.allowPullingPastMaxHeight = self.allowPullingPastMaxHeight
             case "contentBackgroundColor":
-                self.contentBackgroundColor = UIColor(ciColor: CIColor(string: value as! String))
+                self.contentBackgroundColor = RCTConvert.uiColor(value)
                 sheetController?.contentBackgroundColor = self.contentBackgroundColor
             case "overlayColor":
-                self.overlayColor = UIColor(ciColor: CIColor(string: value as! String))
+                self.overlayColor = RCTConvert.uiColor(value)
                 sheetController?.overlayColor = self.overlayColor
             default: return
             }

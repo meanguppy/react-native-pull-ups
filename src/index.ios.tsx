@@ -5,6 +5,7 @@ import {
   StyleSheet,
   View,
   ViewProps,
+  processColor,
   requireNativeComponent,
 } from 'react-native';
 import {
@@ -28,8 +29,9 @@ interface NativeProps extends ViewProps {
   iosStyling?: IOSStyling;
 }
 
-const NativePullUp: HostComponent<NativeProps> =
-  requireNativeComponent('RNPullUpView');
+const NativePullUp: HostComponent<NativeProps> = requireNativeComponent(
+  'RNPullUpView'
+);
 
 const styles = StyleSheet.create({
   primary: {
@@ -45,6 +47,14 @@ const styles = StyleSheet.create({
   },
 });
 
+function processColors(config: IOSStyling) {
+  for (const [k, v] of Object.entries(config)) {
+    if (typeof v === 'string') {
+      config[k as keyof IOSStyling] = processColor(v) as any;
+    }
+  }
+}
+
 const PullUp = (props: PullUpProps) => {
   const {
     collapsedHeight,
@@ -54,6 +64,7 @@ const PullUp = (props: PullUpProps) => {
     dismissable,
     tapToDismissModal,
     onStateChanged,
+    iosStyling,
     children,
     style,
   } = props;
@@ -65,6 +76,8 @@ const PullUp = (props: PullUpProps) => {
     },
     [onStateChanged]
   );
+
+  if (iosStyling) processColors(iosStyling);
 
   return (
     <NativePullUp
