@@ -1,3 +1,7 @@
+/* This file is necessary in order for TypeScript
+ * to properly understand the .android and .ios
+ * file extensions used by react-native */
+
 import DefaultIos from './index.ios';
 import DefaultAndroid from './index.android';
 declare var _testDefault: typeof DefaultIos;
