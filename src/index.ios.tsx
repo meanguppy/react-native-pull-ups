@@ -68,7 +68,7 @@ const PullUp = ({
       modal={modal}
       collapsible={!!collapsedHeight && !modal}
       hideable={hideable && (!modal || dismissable)}
-      tapToDismissModal={tapToDismissModal}
+      tapToDismissModal={dismissable && tapToDismissModal}
       onStateChanged={onNativeStateChanged}
       iosStyling={iosStyling}
     >
