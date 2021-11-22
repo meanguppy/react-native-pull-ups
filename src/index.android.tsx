@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import {
-  View,
-  TouchableWithoutFeedback,
-  StyleSheet,
+  HostComponent,
   NativeEventEmitter,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+  ViewProps,
   requireNativeComponent,
 } from 'react-native';
 import CustomAndroidModal from './CustomAndroidModal';
@@ -14,7 +16,12 @@ import {
   PullUpDefaultProps,
 } from './types';
 
-const NativePullUp = requireNativeComponent('RNPullUpView');
+/* Props for Native Android component.
+ * Not to be confused with the main component. */
+interface NativeProps extends ViewProps {}
+
+const NativePullUp: HostComponent<NativeProps> =
+  requireNativeComponent('RNPullUpView');
 
 const styles = StyleSheet.create({
   primary: {

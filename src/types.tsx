@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 
 export type SheetState = 'hidden' | 'collapsed' | 'expanded';
 
-type IOSStyling = {
+export type IOSStyling = {
   pullBarHeight?: number;
   presentingViewCornerRadius?: number;
   shouldExtendBackground?: boolean;
@@ -29,7 +29,7 @@ export type PullUpProps = {
   tapToDismissModal?: boolean;
   onStateChanged: (newState: SheetState) => void;
   iosStyling?: IOSStyling;
-  children?: object;
+  children?: React.ReactNode;
 };
 
 export const PullUpPropTypes = {

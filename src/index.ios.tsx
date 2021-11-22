@@ -1,13 +1,36 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, requireNativeComponent } from 'react-native';
+import {
+  HostComponent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  View,
+  ViewProps,
+  requireNativeComponent,
+} from 'react-native';
 import {
   PullUpProps,
   SheetState,
+  IOSStyling,
   PullUpPropTypes,
   PullUpDefaultProps,
 } from './types';
 
-const NativePullUp = requireNativeComponent('RNPullUpView');
+/* Props for Native iOS component.
+ * Not to be confused with the main component. */
+interface NativeProps extends ViewProps {
+  state: SheetState;
+  collapsedHeight?: number;
+  maxWidth?: number;
+  modal?: boolean;
+  collapsible?: boolean;
+  hideable?: boolean;
+  tapToDismissModal?: boolean;
+  onStateChanged: (evt: NativeSyntheticEvent<{ state: SheetState }>) => void;
+  iosStyling?: IOSStyling;
+}
+
+const NativePullUp: HostComponent<NativeProps> =
+  requireNativeComponent('RNPullUpView');
 
 const styles = StyleSheet.create({
   primary: {
@@ -29,7 +52,7 @@ const PullUp = ({
   children,
 }: PullUpProps) => {
   const onNativeStateChanged = useCallback(
-    (evt) => {
+    (evt: NativeSyntheticEvent<{ state: SheetState }>) => {
       const { state: newState } = evt.nativeEvent;
       onStateChanged?.(newState);
     },
@@ -43,7 +66,7 @@ const PullUp = ({
       collapsedHeight={collapsedHeight}
       maxWidth={maxWidth}
       modal={modal}
-      collapsible={collapsedHeight && !modal}
+      collapsible={!!collapsedHeight && !modal}
       hideable={hideable && (!modal || dismissable)}
       tapToDismissModal={tapToDismissModal}
       onStateChanged={onNativeStateChanged}

@@ -1,6 +1,6 @@
-import { Modal } from 'react-native';
+import { Modal, ViewStyle } from 'react-native';
 
-const modalStyle = { backgroundColor: 'transparent' };
+const modalStyle: ViewStyle = { backgroundColor: 'transparent' };
 
 /* Warning: Slight hack.
  * The default Modal uses a hard-coded white background for the
@@ -9,8 +9,8 @@ const modalStyle = { backgroundColor: 'transparent' };
  * which we want to keep. No choice but to dive in and fix the
  * styling ourselves!
  */
-function fixInnerViewStyling(target) {
-  if (!target || !target.props) return;
+function fixInnerViewStyling(target: any) {
+  if (!target || typeof target !== 'object' || !target.props) return;
   const { type, props } = target;
   if (type.displayName === 'View' && props && props.style) {
     props.style.splice(1, 1, modalStyle);
