@@ -29,8 +29,9 @@ interface NativeProps extends ViewProps {
   iosStyling?: IOSStyling;
 }
 
-const NativePullUp: HostComponent<NativeProps> =
-  requireNativeComponent('RNPullUpView');
+const NativePullUp: HostComponent<NativeProps> = requireNativeComponent(
+  'RNPullUpView'
+);
 
 const styles = StyleSheet.create({
   primary: {
@@ -75,7 +76,9 @@ const PullUp = (props: PullUpProps) => {
       tapToDismissModal={dismissable && tapToDismissModal}
       onStateChanged={onNativeStateChanged}
     >
-      <View style={[styles.sheet, style]}>{children}</View>
+      <View collapsable={false} style={[styles.sheet, style]}>
+        {children}
+      </View>
     </NativePullUp>
   );
 };

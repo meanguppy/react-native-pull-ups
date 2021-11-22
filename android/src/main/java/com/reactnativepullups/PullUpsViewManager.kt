@@ -108,7 +108,6 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     newState?.let {
       if(state == newState) return
       state = newState
-      //Log.d("PULLUPS", "InternalState: " + state.str)
       context
         .getJSModule(RCTDeviceEventEmitter::class.java)
         .emit("BottomSheetStateChange", state.str)
