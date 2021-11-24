@@ -308,7 +308,8 @@ class PullUpView: UIView, RCTInvalidating {
 
     private func mountSheet() {
         let rvc = self.reactViewController()!
-        if(modal) {
+        if(modal){
+            sheetController!.resize(to: actualSizes[currentSizeIdx], animated: false)
             rvc.present(sheetController!, animated: true)
             attachedController = rvc
         } else {
