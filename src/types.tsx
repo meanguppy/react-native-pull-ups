@@ -28,6 +28,7 @@ export type PullUpProps = {
   hideable?: boolean;
   dismissable?: boolean;
   tapToDismissModal?: boolean;
+  useSafeArea?: boolean;
   onStateChanged: (newState: SheetState) => void;
   iosStyling?: IOSStyling;
   style?: ViewStyle;
@@ -42,6 +43,7 @@ export const PullUpPropTypes = {
   hideable: PropTypes.bool,
   dismissable: PropTypes.bool,
   tapToDismissModal: PropTypes.bool,
+  useSafeArea: PropTypes.bool,
   onStateChanged: PropTypes.func,
   iosStyling: PropTypes.object,
   style: PropTypes.object,
@@ -52,4 +54,5 @@ export const PullUpDefaultProps = {
   hideable: true,
   dismissable: true,
   tapToDismissModal: true,
+  useSafeArea: true,
 };

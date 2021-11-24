@@ -20,11 +20,11 @@ class FixedHeightView: UIView {
 
 class PullUpViewController: UIViewController {
 
-    let primaryView: PullUpView
+    let target: PullUpView
     var lastWidth: CGFloat = 0
 
     init(target: PullUpView){
-        self.primaryView = target
+        self.target = target
         super.init(nibName: nil, bundle: nil)
         self.view = FixedHeightView()
     }
@@ -35,23 +35,18 @@ class PullUpViewController: UIViewController {
 
     override func viewDidLayoutSubviews(){
         super.viewDidLayoutSubviews()
-        let size = CGSize(
-            width: view.frame.width,
-            height: primaryView.bounds.height
-        )
-        if(lastWidth == size.width){ return }
-
-        (view as! FixedHeightView).intrinsicHeight = size.height
-        let child = self.view.subviews[0]
-        primaryView.bridge.uiManager?.setSize(size, for: child)
-        lastWidth = size.width
+        let width = view.frame.width
+        if(lastWidth != width){
+            target.updateContainerSize()
+            lastWidth = width
+        }
     }
 }
 
 @objc(PullUpView)
 class PullUpView: UIView {
     /* Internal state */
-    public var bridge: RCTBridge
+    public var uiManager: RCTUIManager
     var touchHandler: RCTTouchHandler
     var controller: PullUpViewController?
     var sheetController: SheetViewController? = nil
@@ -59,6 +54,9 @@ class PullUpView: UIView {
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
     var remountRequired: Bool = false
+    var safeAreaBottom: CGFloat = 0
+    var initialHeight: CGFloat = 0
+    var initialBottomPad: Float = 0
     /* Internal props */
     var currentSizeIdx: Int = 0 //via `state` prop
     var actualSizes: Array<SheetSize> = [ .fixed(0), .intrinsic, .intrinsic]
@@ -86,7 +84,7 @@ class PullUpView: UIView {
     var shrinkPresentingViewController: Bool = false
 
     init(bridge: RCTBridge){
-        self.bridge = bridge
+        self.uiManager = bridge.uiManager!
         self.touchHandler = RCTTouchHandler(bridge: bridge)
         super.init(frame: CGRect.zero)
         self.controller = PullUpViewController(target: self)
@@ -102,6 +100,7 @@ class PullUpView: UIView {
         if(self.hasInitialized){ return }
         self.hasInitialized = true
         self.remountRequired = false
+        self.initialHeight = bounds.height //height of react component
         self.assignController()
         self.syncSheetState()
     }
@@ -170,8 +169,7 @@ class PullUpView: UIView {
         sheetController.dismissOnOverlayTap = self.tapToDismissModal
         
         // Disable the ability to pull down to dismiss the modal
-        // NOTE: We handle this manually when `state` is `hidden`
-        sheetController.dismissOnPull = false
+        sheetController.dismissOnPull = self.hideable
         
         // Allow pulling past the maximum height and bounce back.
         // Defaults to true.
@@ -182,7 +180,7 @@ class PullUpView: UIView {
         
         // Color of the sheet anywhere the child view controller may not show (or is transparent),
         // such as behind the keyboard currently
-        sheetController.contentBackgroundColor = UIColor.clear
+        sheetController.contentBackgroundColor = self.contentBackgroundColor
         
         // Change the overlay color
         sheetController.overlayColor = self.modal ? self.overlayColor : UIColor.clear
@@ -220,10 +218,41 @@ class PullUpView: UIView {
             self.onStateChanged?(["state": newState])
         }
     }
+
+    public func updateContainerSize(){
+        let container = (controller!.view as! FixedHeightView)
+        let width = container.frame.width //fittedsheets container width
+        let bottomPad = initialBottomPad + Float(safeAreaBottom)
+
+        container.intrinsicHeight = (initialHeight + safeAreaBottom)
+        sheetController?.updateIntrinsicHeight()
+
+        if(container.subviews.count == 0){ return }
+        let child = container.subviews[0]
+        RCTExecuteOnUIManagerQueue {
+            let ygnode = self.uiManager.shadowView(forReactTag: child.reactTag)?.yogaNode
+            if(ygnode == nil){ return }
+            YGNodeStyleSetWidth(ygnode, Float(width))
+            YGNodeStyleSetPadding(ygnode, YGEdge.bottom, bottomPad)
+            self.uiManager.setNeedsLayout()
+        }
+    }
     
     override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
         self.controller!.view.addSubview(subview)
         touchHandler.attach(to: subview)
+        // check our sheet view for existing padding
+        // we will add safe area padding onto it, if necessary
+        RCTExecuteOnUIManagerQueue {
+            let shadow = self.uiManager.shadowView(forReactTag: subview.reactTag)
+            if(shadow == nil){ return }
+            self.initialBottomPad = [
+                0,
+                shadow!.padding.value,
+                shadow!.paddingVertical.value,
+                shadow!.paddingBottom.value
+            ].max() ?? 0
+        }
     }
     
     override func removeReactSubview(_ subview: UIView!) {
@@ -326,11 +355,25 @@ class PullUpView: UIView {
 
     @objc func setHideable (_ hideable: Bool) {
         self.hideable = hideable
+        sheetController?.dismissOnPull = self.hideable
     }
     
     @objc func setTapToDismissModal (_ tapToDismissModal: Bool) {
         self.tapToDismissModal = tapToDismissModal
         sheetController?.dismissOnOverlayTap = self.tapToDismissModal
+    }
+
+    @objc func setUseSafeArea(_ useSafeArea: Bool) {
+        if(useSafeArea){
+            var window = UIApplication.shared.keyWindow
+            if #available(iOS 13.0, *) {
+                window = UIApplication.shared.windows.first
+            }
+            self.safeAreaBottom = window?.safeAreaInsets.bottom ?? 0
+        } else {
+            self.safeAreaBottom = 0
+        }
+        if(hasInitialized){ self.updateContainerSize() }
     }
 
     @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
