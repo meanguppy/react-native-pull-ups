@@ -1,8 +1,10 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <React/RCTViewManager.h>
+#import <React/RCTInvalidating.h>
 
-@interface PullUpView : UIView
+
+@interface PullUpView : UIView <RCTInvalidating>
 -(void) updateStyleWithJson:id;
 @end
 
@@ -13,6 +15,7 @@ RCT_EXPORT_VIEW_PROPERTY(maxSheetWidth, NSNumber);
 RCT_EXPORT_VIEW_PROPERTY(modal, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(hideable, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(tapToDismissModal, BOOL);
+RCT_EXPORT_VIEW_PROPERTY(useSafeArea, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(onStateChanged, RCTDirectEventBlock);
 RCT_CUSTOM_VIEW_PROPERTY(iosStyling, NSDictionary, PullUpView){
 	[view updateStyleWithJson:json];

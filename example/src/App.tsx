@@ -60,6 +60,7 @@ function PullUpContent() {
 function ContentView() {
   const [state, setState] = useState<SheetState>('collapsed');
   const [useModal, setUseModal] = useState(false);
+  const [useSafeArea, setUseSafeArea] = useState(true);
 
   const onSheetChanged = useCallback((newState: SheetState) => {
     console.log('State changed:', newState);
@@ -86,6 +87,12 @@ function ContentView() {
         <Button title="Collapsed" onPress={() => setState('collapsed')} />
         <Button title="Expanded" onPress={() => setState('expanded')} />
         <Button title={`Modal mode: ${useModal}`} onPress={toggleModalMode} />
+        {Platform.OS === 'ios' && (
+          <Button
+            title={`Use SafeArea: ${useSafeArea}`}
+            onPress={() => setUseSafeArea(!useSafeArea)}
+          />
+        )}
         {new Array(100).fill('').map((_, i) => (
           <Text key={i}>Background {i}</Text>
         ))}
@@ -101,6 +108,7 @@ function ContentView() {
         hideable={true}
         dismissable={true}
         tapToDismissModal={true}
+        useSafeArea={useSafeArea}
         onStateChanged={onSheetChanged}
         iosStyling={{ overlayColor: 'rgba(0,0,0,0.5)' }}
         style={styles.sheet}

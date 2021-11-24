@@ -27,10 +27,10 @@ npx pod-install
 
 ### Overview
 
-* The sheet can be in three different states: `expanded`, `collapsed`, or `hidden`.
+* The sheet can be in one of three different states:
   * `expanded`: The sheet is fully expanded, and all content is visible.
   * `collapsed`: The sheet is visible, but only partially. This is defined by `collapsedHeight`, and is optional.
-  * `hidden`: The sheet is out of view, bring it into view by setting the state programmatically. To prevent users from hiding the view, set `hideable={false}`.
+  * `hidden`: The sheet is out of view. Bring it into view by setting the state programmatically. To prevent users from hiding the view, set `hideable={false}`.
 * The intrinsic height of the content placed in the sheet represents the height of the `expanded` state.
 * When the sheet state is changed, the `onStateChanged(newState: 'expanded' | 'collapsed' | 'hidden')` event is fired. Generally, you will want to synchronize the state of your component with the value passed here.
 * The sheet can be presented in two modes: persistent and modal.
@@ -87,6 +87,7 @@ Note: Content rendered in a modal sheet is only mounted when the sheet is expand
 - [`hideable`](#hideable)
 - [`dismissable`](#dismissable)
 - [`tapToDismissModal`](#tapToDismissModal)
+- [`useSafeArea`](#useSafeArea)
 - [`onStateChanged`](#onStateChanged)
 - [`iosStyling`](#iosStyling)
 - [`style`](#style)
@@ -174,6 +175,17 @@ Allows the user to hide the sheet by swiping/dragging down. Note that the sheet 
 
 ---
 
+### `useSafeArea`
+
+Automatically applies additional bottom padding to the sheet, if applicable.
+
+
+| Type | Default | Platform |
+| ------ | --------- | ----- |
+| bool | `true`  | iOS |
+
+---
+
 ### `onStateChanged`
 
 Called when the sheet state is changed.
@@ -214,7 +226,7 @@ Object structure:
 | contentBackgroundColor         | [Color](https://reactnative.dev/docs/colors#color-representations) | `rgba(0,0,0,0)`            |
 | overlayColor                   | [Color](https://reactnative.dev/docs/colors#color-representations) | `rgba(0,0,0,0.5)`          |
 
-Note: `cornerRadius` and `contentBackgroundColor` are unused by default. Instead, visually identical styles are applied via `style` for a more consistent and familiar behavior. See the [`style`](#style) prop for more information. We leave it exposed because altering other styling options may require them to be tweaked to prevent visual bugs.
+Note: By default, `cornerRadius` and `contentBackgroundColor` are not used. Instead, visually identical styles are applied via `style` for a more consistent and familiar behavior. See the [`style`](#style) prop for more information. We leave these exposed because altering other styling options may require them to be tweaked to prevent visual bugs.
 
 ---
 
