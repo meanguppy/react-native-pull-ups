@@ -44,17 +44,17 @@ class PullUpViewController: UIViewController {
 }
 
 @objc(PullUpView)
-class PullUpView: UIView {
+class PullUpView: UIView, RCTInvalidating {
     /* Internal state */
     public var uiManager: RCTUIManager
     var touchHandler: RCTTouchHandler
     var controller: PullUpViewController?
-    var sheetController: SheetViewController? = nil
+    var sheetController: SheetViewController?
+    var attachedController: UIViewController?
     var hasInitialized: Bool = false
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
     var remountRequired: Bool = false
-    var safeAreaBottom: CGFloat = 0
     var initialHeight: CGFloat = 0
     var initialBottomPad: Float = 0
     /* Internal props */
@@ -62,10 +62,11 @@ class PullUpView: UIView {
     var actualSizes: Array<SheetSize> = [ .fixed(0), .intrinsic, .intrinsic]
     var hideable: Bool = true
     var modal: Bool = false
-    var onStateChanged: RCTDirectEventBlock? = nil
+    var safeAreaBottom: CGFloat = 0
+    var onStateChanged: RCTDirectEventBlock?
     /* FittedSheets props */
     var tapToDismissModal: Bool = true
-    var maxWidth: CGFloat? = nil
+    var maxWidth: CGFloat?
     /* FittedSheets styling (controller) */
     var gripSize: CGSize = CGSize(width: 50, height: 6)
     var gripColor: UIColor = UIColor(white: 0.868, alpha: 1)
@@ -210,6 +211,13 @@ class PullUpView: UIView {
         self.notifyStateChange(idx: 0)
     }
 
+    func invalidate(){
+        sheetController?.sizeChanged = nil
+        sheetController?.didDismiss = nil
+        self.onStateChanged = nil
+        destroySheet()
+    }
+
     private func notifyStateChange(idx: Int) {
         let didChange = (self.currentSizeIdx != idx)
         if(didChange){
@@ -302,6 +310,7 @@ class PullUpView: UIView {
         let rvc = self.reactViewController()!
         if(modal) {
             rvc.present(sheetController!, animated: true)
+            attachedController = rvc
         } else {
             sheetController!.willMove(toParent: rvc)
             rvc.addChild(sheetController!)
@@ -324,8 +333,9 @@ class PullUpView: UIView {
         // if inline,
         sheetController!.animateOut()
         // and if modal. do both so we dont have to keep track
-        reactViewController()!.dismiss(animated: true)
+        attachedController?.dismiss(animated: true)
 
+        self.attachedController = nil
         self.isMounted = false
         self.notifyStateChange(idx: 0)
     }

@@ -1,8 +1,10 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <React/RCTViewManager.h>
+#import <React/RCTInvalidating.h>
 
-@interface PullUpView : UIView
+
+@interface PullUpView : UIView <RCTInvalidating>
 -(void) updateStyleWithJson:id;
 @end
 
