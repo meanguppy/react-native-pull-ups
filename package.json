@@ -1,6 +1,6 @@
 {
   "name": "react-native-pull-ups",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Native Bottom Sheet Implementations for iOS and Android. Toddler approved.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -34,7 +34,21 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "bottom",
+    "sheet",
+    "bottomsheet",
+    "behavior",
+    "material",
+    "coordinatorlayout",
+    "fittedsheets",
+    "hidden",
+    "collapsed",
+    "hideable",
+    "collapsible",
+    "card",
+    "modal",
+    "dialog"
   ],
   "repository": "https://github.com/thessler27/react-native-pull-ups",
   "author": "Thomas Hessler <hessler.thomas93@gmail.com> (https://github.com/thessler27)",
