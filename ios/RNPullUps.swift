@@ -50,7 +50,6 @@ class PullUpView: UIView, RCTInvalidating {
     var touchHandler: RCTTouchHandler
     var controller: PullUpViewController?
     var sheetController: SheetViewController?
-    var attachedController: UIViewController?
     var hasInitialized: Bool = false
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
@@ -170,7 +169,7 @@ class PullUpView: UIView, RCTInvalidating {
         sheetController.dismissOnOverlayTap = self.tapToDismissModal
         
         // Disable the ability to pull down to dismiss the modal
-        sheetController.dismissOnPull = self.hideable
+        sheetController.dismissOnPull = false
         
         // Allow pulling past the maximum height and bounce back.
         // Defaults to true.
@@ -311,7 +310,6 @@ class PullUpView: UIView, RCTInvalidating {
         if(modal){
             sheetController!.resize(to: actualSizes[currentSizeIdx], animated: false)
             rvc.present(sheetController!, animated: true)
-            attachedController = rvc
         } else {
             sheetController!.willMove(toParent: rvc)
             rvc.addChild(sheetController!)
@@ -331,12 +329,7 @@ class PullUpView: UIView, RCTInvalidating {
     }
     
     private func destroySheet() {
-        // if inline,
-        sheetController!.animateOut()
-        // and if modal. do both so we dont have to keep track
-        attachedController?.dismiss(animated: true)
-
-        self.attachedController = nil
+        sheetController!.attemptDismiss(animated: true)
         self.isMounted = false
         self.notifyStateChange(idx: 0)
     }
@@ -366,7 +359,6 @@ class PullUpView: UIView, RCTInvalidating {
 
     @objc func setHideable (_ hideable: Bool) {
         self.hideable = hideable
-        sheetController?.dismissOnPull = self.hideable
     }
     
     @objc func setTapToDismissModal (_ tapToDismissModal: Bool) {
