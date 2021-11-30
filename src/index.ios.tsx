@@ -57,6 +57,7 @@ function processColors(config: IOSStyling) {
 
 const PullUp = (props: PullUpProps) => {
   const {
+    state,
     collapsedHeight,
     maxSheetWidth,
     modal,
@@ -77,6 +78,7 @@ const PullUp = (props: PullUpProps) => {
     [onStateChanged]
   );
 
+  const mountChildren = !modal || state !== 'hidden';
   if (iosStyling) processColors(iosStyling);
 
   return (
@@ -90,7 +92,7 @@ const PullUp = (props: PullUpProps) => {
       onStateChanged={onNativeStateChanged}
     >
       <View collapsable={false} style={[styles.sheet, style]}>
-        {children}
+        {mountChildren && children}
       </View>
     </NativePullUp>
   );
