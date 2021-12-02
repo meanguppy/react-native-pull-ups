@@ -15,6 +15,7 @@ import com.facebook.react.uimanager.annotations.ReactProp
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 
+@Suppress("UNUSED_PARAMETER")
 class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
 
   override fun getName() = "RNPullUpView"
