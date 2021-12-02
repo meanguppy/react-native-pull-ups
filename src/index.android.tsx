@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   HostComponent,
   NativeEventEmitter,
@@ -7,8 +7,9 @@ import {
   View,
   ViewProps,
   requireNativeComponent,
+  Modal,
+  Animated,
 } from 'react-native';
-import CustomAndroidModal from './CustomAndroidModal';
 import {
   PullUpProps,
   SheetState,
@@ -43,8 +44,9 @@ const styles = StyleSheet.create({
   modal: {
     position: 'absolute',
   },
-  flex: {
+  overlay: {
     flex: 1,
+    backgroundColor: 'black',
   },
 });
 
@@ -95,25 +97,55 @@ const PullUpModal = (props: PullUpProps) => {
     tapToDismissModal,
     onStateChanged,
   } = props;
-  if (state === 'hidden') return null;
 
-  function onRequestClose() {
+  const [destroyed, setDestroyed] = useState(state === 'hidden');
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  /* Manage sheet state and destroyed state for */
+  useEffect(() => {
+    const hiding = state === 'hidden';
+    const target = hiding ? 0 : 0.7;
+    const animation = Animated.timing(opacity, {
+      toValue: target,
+      duration: 250,
+      useNativeDriver: true,
+    });
+
+    if (hiding) {
+      /* Start opacity animation, and destroy modal after it completes. */
+      animation.start(() => setDestroyed(true));
+    } else {
+      /* The initial sheet render must be 'hidden' in order for the
+       * slide-up animation to appear. Start the overlay opacity animation,
+       * and then set `destroyed` to false to start the slide-up animation. */
+      animation.start();
+      setTimeout(() => setDestroyed(false));
+    }
+  }, [state, destroyed, opacity]);
+
+  const onRequestClose = useCallback(() => {
     if (dismissable) onStateChanged?.('hidden');
-  }
+  }, [dismissable, onStateChanged]);
 
-  function onPressOverlay() {
+  const onPressOverlay = useCallback(() => {
     if (dismissable && tapToDismissModal) {
       onStateChanged?.('hidden');
     }
-  }
+  }, [dismissable, tapToDismissModal, onStateChanged]);
+
+  if (destroyed && state === 'hidden') return null;
 
   return (
-    <CustomAndroidModal animationType="slide" onRequestClose={onRequestClose}>
+    <Modal transparent onRequestClose={onRequestClose}>
       <TouchableWithoutFeedback onPress={onPressOverlay}>
-        <View style={styles.flex} />
+        <Animated.View style={[styles.overlay, { opacity }]} />
       </TouchableWithoutFeedback>
-      <PullUpBase {...props} hideable={hideable && dismissable} />
-    </CustomAndroidModal>
+      <PullUpBase
+        {...props}
+        state={destroyed ? 'hidden' : state}
+        hideable={hideable && dismissable}
+      />
+    </Modal>
   );
 };
 
