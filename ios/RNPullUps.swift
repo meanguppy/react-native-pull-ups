@@ -50,7 +50,6 @@ class PullUpView: UIView, RCTInvalidating {
     var touchHandler: RCTTouchHandler
     var controller: PullUpViewController?
     var sheetController: SheetViewController?
-    var attachedController: UIViewController?
     var hasInitialized: Bool = false
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
@@ -59,7 +58,7 @@ class PullUpView: UIView, RCTInvalidating {
     var initialBottomPad: Float = 0
     /* Internal props */
     var currentSizeIdx: Int = 0 //via `state` prop
-    var actualSizes: Array<SheetSize> = [ .fixed(0), .intrinsic, .intrinsic]
+    var actualSizes: Array<SheetSize> = [.intrinsic, .intrinsic]
     var hideable: Bool = true
     var modal: Bool = false
     var safeAreaBottom: CGFloat = 0
@@ -202,7 +201,7 @@ class PullUpView: UIView, RCTInvalidating {
         // search for lastIndex in case size values are duplicated to disable
         // certain states from ocurring (hidden/collapsed optional)
         if let idx = self.actualSizes.lastIndex(of: size) {
-            self.notifyStateChange(idx: idx)
+            self.notifyStateChange(idx: idx + 1)
         }
     }
 
@@ -282,17 +281,12 @@ class PullUpView: UIView, RCTInvalidating {
     }
     
     private func syncSheetState() {
-        let shouldBeMounted = (!modal || currentSizeIdx != 0)
+        let shouldBeMounted = (currentSizeIdx > 0)
         if(shouldBeMounted){
             if(!isMounted){ mountSheet() }
 
-            // ensure available sheet sizes are up-to-date
-            var clone = actualSizes
-            if(!hideable){ clone[0] = clone[1] }
-            sheetController?.sizes = clone
-
             // ensure sheet is in correct state
-            let targetSize = actualSizes[currentSizeIdx]
+            let targetSize = actualSizes[currentSizeIdx - 1]
             if(sheetController!.currentSize != targetSize){
                 // we can't differentiate between users changing the size
                 // and us resizing it.. need this flag to prevent
@@ -308,9 +302,9 @@ class PullUpView: UIView, RCTInvalidating {
 
     private func mountSheet() {
         let rvc = self.reactViewController()!
-        if(modal) {
+        if(modal){
+            sheetController!.resize(to: actualSizes[currentSizeIdx - 1], animated: false)
             rvc.present(sheetController!, animated: true)
-            attachedController = rvc
         } else {
             sheetController!.willMove(toParent: rvc)
             rvc.addChild(sheetController!)
@@ -323,19 +317,14 @@ class PullUpView: UIView, RCTInvalidating {
                 sheetController!.view.leadingAnchor.constraint(equalTo: rvc.view.leadingAnchor),
                 sheetController!.view.trailingAnchor.constraint(equalTo: rvc.view.trailingAnchor)
             ])
-            sheetController!.animateIn(size: actualSizes[currentSizeIdx], duration: 0.3)
+            sheetController!.animateIn(size: actualSizes[currentSizeIdx - 1], duration: 0.3)
         }
         self.isMounted = true
         self.notifyStateChange(idx: currentSizeIdx)
     }
     
     private func destroySheet() {
-        // if inline,
-        sheetController!.animateOut()
-        // and if modal. do both so we dont have to keep track
-        attachedController?.dismiss(animated: true)
-
-        self.attachedController = nil
+        sheetController!.attemptDismiss(animated: true)
         self.isMounted = false
         self.notifyStateChange(idx: 0)
     }
@@ -349,7 +338,7 @@ class PullUpView: UIView, RCTInvalidating {
 
     @objc func setCollapsedHeight (_ collapsedHeight: NSNumber) {
         let val = CGFloat(truncating: collapsedHeight)
-        self.actualSizes[1] = val > 0 ? .fixed(val) : .intrinsic
+        self.actualSizes[0] = val > 0 ? .fixed(val) : .intrinsic
     }
     
     @objc func setMaxSheetWidth (_ maxSheetWidth: NSNumber) {
@@ -365,7 +354,7 @@ class PullUpView: UIView, RCTInvalidating {
 
     @objc func setHideable (_ hideable: Bool) {
         self.hideable = hideable
-        sheetController?.dismissOnPull = self.hideable
+        sheetController?.dismissOnPull = hideable
     }
     
     @objc func setTapToDismissModal (_ tapToDismissModal: Bool) {
@@ -388,6 +377,16 @@ class PullUpView: UIView, RCTInvalidating {
 
     @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
         self.onStateChanged = onStateChanged
+    }
+
+    @objc func setOverlayColor (_ color: UIColor) {
+        self.overlayColor = color.withAlphaComponent(self.overlayColor.cgColor.alpha)
+        sheetController?.overlayColor = self.overlayColor
+    }
+
+    @objc func setOverlayOpacity (_ opacity: NSNumber) {
+        self.overlayColor = self.overlayColor.withAlphaComponent(CGFloat(truncating: opacity))
+        sheetController?.overlayColor = self.overlayColor
     }
     
     @objc func updateStyle(json: Any?){
@@ -436,9 +435,6 @@ class PullUpView: UIView, RCTInvalidating {
             case "contentBackgroundColor":
                 self.contentBackgroundColor = RCTConvert.uiColor(value)
                 sheetController?.contentBackgroundColor = self.contentBackgroundColor
-            case "overlayColor":
-                self.overlayColor = RCTConvert.uiColor(value)
-                sheetController?.overlayColor = self.overlayColor
             default: return
             }
         }

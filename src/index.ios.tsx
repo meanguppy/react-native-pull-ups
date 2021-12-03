@@ -7,6 +7,7 @@ import {
   ViewProps,
   processColor,
   requireNativeComponent,
+  ColorValue,
 } from 'react-native';
 import {
   PullUpProps,
@@ -25,6 +26,8 @@ interface NativeProps extends ViewProps {
   modal?: boolean;
   hideable?: boolean;
   tapToDismissModal?: boolean;
+  overlayColor?: ColorValue;
+  overlayOpacity?: number;
   onStateChanged: (evt: NativeSyntheticEvent<{ state: SheetState }>) => void;
   iosStyling?: IOSStyling;
 }
@@ -77,6 +80,8 @@ const PullUp = (props: PullUpProps) => {
     [onStateChanged]
   );
 
+  //TODO: properly handle dismounting in modal mode
+  //const mountChildren = !modal || state !== 'hidden';
   if (iosStyling) processColors(iosStyling);
 
   return (

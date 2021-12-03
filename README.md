@@ -197,6 +197,26 @@ Called when the sheet state is changed.
 
 ---
 
+### `overlayColor`
+
+(Modal mode only): the color to use for the background overlay.
+
+| Type   | Default |
+| -------- | ---------- |
+| [Color](https://reactnative.dev/docs/colors#color-representations) | `"black"` |
+
+---
+
+### `overlayOpacity`
+
+(Modal mode only): the opacity to apply to the background overlay, ranging from `0.0`-`1.0`.
+
+| Type   | Default |
+| -------- | ---------- |
+| number | 0.5 |
+
+---
+
 ### `iosStyling`
 
 A configuration object for customizing various [FittedSheets](https://github.com/gordontucker/FittedSheets) styling options.
@@ -224,7 +244,6 @@ Object structure:
 | treatPullBarAsClear            | bool                                                               | `false`                    |
 | allowPullingPastMaxHeight      | bool                                                               | `false`                    |
 | contentBackgroundColor         | [Color](https://reactnative.dev/docs/colors#color-representations) | `rgba(0,0,0,0)`            |
-| overlayColor                   | [Color](https://reactnative.dev/docs/colors#color-representations) | `rgba(0,0,0,0.5)`          |
 
 Note: By default, `cornerRadius` and `contentBackgroundColor` are not used. Instead, visually identical styles are applied via `style` for a more consistent and familiar behavior. See the [`style`](#style) prop for more information. We leave these exposed because altering other styling options may require them to be tweaked to prevent visual bugs.
 

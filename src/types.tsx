@@ -1,4 +1,5 @@
-import type { ViewStyle, ColorValue } from 'react-native';
+import { ViewStyle, ColorValue, ColorPropType } from 'react-native';
+import { ViewPropTypes } from 'react-native';
 import PropTypes from 'prop-types';
 
 export type SheetState = 'hidden' | 'collapsed' | 'expanded';
@@ -17,7 +18,6 @@ export type IOSStyling = {
   treatPullBarAsClear?: boolean;
   allowPullingPastMaxHeight?: boolean;
   contentBackgroundColor?: ColorValue;
-  overlayColor?: ColorValue;
 };
 
 export type PullUpProps = {
@@ -30,6 +30,8 @@ export type PullUpProps = {
   tapToDismissModal?: boolean;
   useSafeArea?: boolean;
   onStateChanged: (newState: SheetState) => void;
+  overlayColor?: ColorValue;
+  overlayOpacity?: number;
   iosStyling?: IOSStyling;
   style?: ViewStyle;
   children?: React.ReactNode;
@@ -45,8 +47,10 @@ export const PullUpPropTypes = {
   tapToDismissModal: PropTypes.bool,
   useSafeArea: PropTypes.bool,
   onStateChanged: PropTypes.func,
+  overlayColor: ColorPropType,
+  overlayOpacity: PropTypes.number,
   iosStyling: PropTypes.object,
-  style: PropTypes.object,
+  style: ViewPropTypes.style,
 };
 
 export const PullUpDefaultProps = {
@@ -55,4 +59,6 @@ export const PullUpDefaultProps = {
   dismissable: true,
   tapToDismissModal: true,
   useSafeArea: true,
+  overlayColor: 'black',
+  overlayOpacity: 0.5,
 };
