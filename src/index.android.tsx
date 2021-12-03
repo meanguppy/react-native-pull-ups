@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   HostComponent,
   NativeEventEmitter,
@@ -89,65 +89,100 @@ const PullUpBase = (props: PullUpProps) => {
   );
 };
 
-const PullUpModal = (props: PullUpProps) => {
-  const {
-    state,
-    hideable,
-    dismissable,
-    tapToDismissModal,
-    onStateChanged,
-  } = props;
+class PullUpModal extends React.Component<PullUpProps> {
+  opacity: Animated.Value;
+  state: { destroyed: boolean; animating: 'in' | 'out' | false };
 
-  const [destroyed, setDestroyed] = useState(state === 'hidden');
-  const opacity = useRef(new Animated.Value(0)).current;
+  constructor(props: PullUpProps) {
+    super(props);
+    this.opacity = new Animated.Value(0);
+    this.state = {
+      destroyed: true,
+      animating: false,
+    };
+  }
 
-  /* Manage sheet state and destroyed state for */
-  useEffect(() => {
-    const hiding = state === 'hidden';
-    const target = hiding ? 0 : 0.7;
-    const animation = Animated.timing(opacity, {
-      toValue: target,
+  componentDidMount() {
+    const { state } = this.props;
+    if (state !== 'hidden') this._animateIn();
+  }
+
+  componentDidUpdate(prevProps: PullUpProps) {
+    const { state } = this.props;
+    const { animating, destroyed } = this.state;
+    if (animating || state === prevProps.state) return;
+
+    if (state === 'hidden' && !destroyed) this._animateOut();
+    if (state !== 'hidden' && destroyed) this._animateIn();
+  }
+
+  _animateOut = () => {
+    this.setState({ animating: 'out' });
+    Animated.timing(this.opacity, {
+      toValue: 0,
       duration: 250,
       useNativeDriver: true,
+    }).start(() => {
+      this.setState({ destroyed: true, animating: false });
     });
+  };
 
-    if (hiding) {
-      /* Start opacity animation, and destroy modal after it completes. */
-      animation.start(() => setDestroyed(true));
-    } else {
-      /* The initial sheet render must be 'hidden' in order for the
-       * slide-up animation to appear. Start the overlay opacity animation,
-       * and then set `destroyed` to false to start the slide-up animation. */
-      animation.start();
-      setTimeout(() => setDestroyed(false));
+  _animateIn = () => {
+    this.setState({ animating: 'in' });
+    setTimeout(() => this.setState({ destroyed: false }));
+    Animated.timing(this.opacity, {
+      toValue: 0.7,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      this.setState({ animating: false });
+    });
+  };
+
+  _onRequestClose = () => {
+    const { dismissable } = this.props;
+    if (dismissable) {
+      this._animateOut();
     }
-  }, [state, destroyed, opacity]);
+  };
 
-  const onRequestClose = useCallback(() => {
-    if (dismissable) onStateChanged?.('hidden');
-  }, [dismissable, onStateChanged]);
-
-  const onPressOverlay = useCallback(() => {
+  _onPressOverlay = () => {
+    const { dismissable, tapToDismissModal } = this.props;
     if (dismissable && tapToDismissModal) {
-      onStateChanged?.('hidden');
+      this._animateOut();
     }
-  }, [dismissable, tapToDismissModal, onStateChanged]);
+  };
 
-  if (destroyed && state === 'hidden') return null;
+  _interceptOnStateChanged = (newState: SheetState) => {
+    const { onStateChanged } = this.props;
+    const { animating } = this.state;
+    if (!animating && newState === 'hidden') {
+      this._animateOut();
+    }
+    onStateChanged?.(newState);
+  };
 
-  return (
-    <Modal transparent onRequestClose={onRequestClose}>
-      <TouchableWithoutFeedback onPress={onPressOverlay}>
-        <Animated.View style={[styles.overlay, { opacity }]} />
-      </TouchableWithoutFeedback>
-      <PullUpBase
-        {...props}
-        state={destroyed ? 'hidden' : state}
-        hideable={hideable && dismissable}
-      />
-    </Modal>
-  );
-};
+  render() {
+    const { state, hideable, dismissable } = this.props;
+    const { destroyed, animating } = this.state;
+
+    if (destroyed && !animating) return null;
+
+    return (
+      <Modal transparent onRequestClose={this._onRequestClose}>
+        <TouchableWithoutFeedback onPress={this._onPressOverlay}>
+          <Animated.View style={[styles.overlay, { opacity: this.opacity }]} />
+        </TouchableWithoutFeedback>
+        <PullUpBase
+          {...this.props}
+          state={destroyed || animating === 'out' ? 'hidden' : state}
+          onStateChanged={this._interceptOnStateChanged}
+          hideable={hideable && dismissable}
+        />
+      </Modal>
+    );
+  }
+}
 
 const PullUp = (props: PullUpProps) =>
   props.modal ? <PullUpModal {...props} /> : <PullUpBase {...props} />;
