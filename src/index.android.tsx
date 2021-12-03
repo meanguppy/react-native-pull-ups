@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: PullUpDefaultProps.overlayColor,
   },
 });
 
@@ -88,6 +88,10 @@ const PullUpBase = (props: PullUpProps) => {
     </NativePullUp>
   );
 };
+
+const AnimatedTouchable = Animated.createAnimatedComponent(
+  TouchableWithoutFeedback
+);
 
 class PullUpModal extends React.Component<PullUpProps> {
   opacity: Animated.Value;
@@ -133,7 +137,7 @@ class PullUpModal extends React.Component<PullUpProps> {
     this.setState({ animating: 'in' });
     setTimeout(() => this.setState({ destroyed: false }));
     Animated.timing(this.opacity, {
-      toValue: 0.7,
+      toValue: this.props.overlayOpacity || PullUpDefaultProps.overlayOpacity,
       duration: 250,
       useNativeDriver: true,
     }).start(({ finished }) => {
@@ -164,16 +168,19 @@ class PullUpModal extends React.Component<PullUpProps> {
   };
 
   render() {
-    const { state, hideable, dismissable } = this.props;
+    const { state, hideable, dismissable, overlayColor } = this.props;
     const { destroyed, animating } = this.state;
 
     if (destroyed && !animating) return null;
 
     return (
       <Modal transparent onRequestClose={this._onRequestClose}>
-        <TouchableWithoutFeedback onPress={this._onPressOverlay}>
-          <Animated.View style={[styles.overlay, { opacity: this.opacity }]} />
-        </TouchableWithoutFeedback>
+        <AnimatedTouchable
+          onPress={this._onPressOverlay}
+          style={{ opacity: this.opacity }}
+        >
+          <View style={[styles.overlay, { backgroundColor: overlayColor }]} />
+        </AnimatedTouchable>
         <PullUpBase
           {...this.props}
           state={destroyed || animating === 'out' ? 'hidden' : state}

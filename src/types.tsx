@@ -59,4 +59,6 @@ export const PullUpDefaultProps = {
   dismissable: true,
   tapToDismissModal: true,
   useSafeArea: true,
+  overlayColor: 'black',
+  overlayOpacity: 0.5,
 };
