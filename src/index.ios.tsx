@@ -25,6 +25,8 @@ interface NativeProps extends ViewProps {
   modal?: boolean;
   hideable?: boolean;
   tapToDismissModal?: boolean;
+  overlayColor?: ReturnType<typeof processColor>;
+  overlayOpacity?: number;
   onStateChanged: (evt: NativeSyntheticEvent<{ state: SheetState }>) => void;
   iosStyling?: IOSStyling;
 }
@@ -64,6 +66,7 @@ const PullUp = (props: PullUpProps) => {
     dismissable,
     tapToDismissModal,
     onStateChanged,
+    overlayColor,
     iosStyling,
     children,
     style,
@@ -89,6 +92,7 @@ const PullUp = (props: PullUpProps) => {
       maxSheetWidth={maxSheetWidth || 0}
       hideable={hideable && (!modal || dismissable)}
       tapToDismissModal={dismissable && tapToDismissModal}
+      overlayColor={overlayColor ? processColor(overlayColor) : undefined}
       onStateChanged={onNativeStateChanged}
     >
       <View collapsable={false} style={[styles.sheet, style]}>

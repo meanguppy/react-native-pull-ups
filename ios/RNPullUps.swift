@@ -378,6 +378,16 @@ class PullUpView: UIView, RCTInvalidating {
     @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
         self.onStateChanged = onStateChanged
     }
+
+    @objc func setOverlayColor (_ color: CGColor) {
+        self.overlayColor = color.copy(alpha: self.overlayColor.alpha)
+        sheetController?.overlayColor = self.overlayColor
+    }
+
+    @objc func setOverlayOpacity (_ opacity: NSNumber) {
+        self.overlayColor = self.overlayColor.copy(alpha: CGFloat(truncating: opacity))
+        sheetController?.overlayColor = self.overlayColor
+    }
     
     @objc func updateStyle(json: Any?){
         guard let config = json as? [String: Any] else { return }
@@ -425,9 +435,6 @@ class PullUpView: UIView, RCTInvalidating {
             case "contentBackgroundColor":
                 self.contentBackgroundColor = RCTConvert.uiColor(value)
                 sheetController?.contentBackgroundColor = self.contentBackgroundColor
-            case "overlayColor":
-                self.overlayColor = RCTConvert.uiColor(value)
-                sheetController?.overlayColor = self.overlayColor
             default: return
             }
         }
