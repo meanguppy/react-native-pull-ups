@@ -117,25 +117,27 @@ class PullUpModal extends React.Component<PullUpProps> {
   }
 
   _animateOut = () => {
+    if (this.state.animating === 'out') return;
     this.setState({ animating: 'out' });
     Animated.timing(this.opacity, {
       toValue: 0,
       duration: 250,
       useNativeDriver: true,
-    }).start(() => {
-      this.setState({ destroyed: true, animating: false });
+    }).start(({ finished }) => {
+      if (finished) this.setState({ destroyed: true, animating: false });
     });
   };
 
   _animateIn = () => {
+    if (this.state.animating === 'in') return;
     this.setState({ animating: 'in' });
     setTimeout(() => this.setState({ destroyed: false }));
     Animated.timing(this.opacity, {
       toValue: 0.7,
       duration: 250,
       useNativeDriver: true,
-    }).start(() => {
-      this.setState({ animating: false });
+    }).start(({ finished }) => {
+      if (finished) this.setState({ animating: false });
     });
   };
 
@@ -155,8 +157,7 @@ class PullUpModal extends React.Component<PullUpProps> {
 
   _interceptOnStateChanged = (newState: SheetState) => {
     const { onStateChanged } = this.props;
-    const { animating } = this.state;
-    if (!animating && newState === 'hidden') {
+    if (newState === 'hidden') {
       this._animateOut();
     }
     onStateChanged?.(newState);
