@@ -89,6 +89,8 @@ Note: Content rendered in a modal sheet is only mounted when the sheet is expand
 - [`tapToDismissModal`](#tapToDismissModal)
 - [`useSafeArea`](#useSafeArea)
 - [`onStateChanged`](#onStateChanged)
+- [`overlayColor`](#overlayColor)
+- [`overlayOpacity`](#overlayOpacity)
 - [`iosStyling`](#iosStyling)
 - [`style`](#style)
 
