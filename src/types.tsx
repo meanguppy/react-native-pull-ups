@@ -1,5 +1,4 @@
-import { ViewStyle, ColorValue, ColorPropType } from 'react-native';
-import { ViewPropTypes } from 'react-native';
+import type { ViewStyle, ColorValue } from 'react-native';
 import PropTypes from 'prop-types';
 
 export type SheetState = 'hidden' | 'collapsed' | 'expanded';
@@ -47,10 +46,8 @@ export const PullUpPropTypes = {
   tapToDismissModal: PropTypes.bool,
   useSafeArea: PropTypes.bool,
   onStateChanged: PropTypes.func,
-  overlayColor: ColorPropType,
   overlayOpacity: PropTypes.number,
   iosStyling: PropTypes.object,
-  style: ViewPropTypes.style,
 };
 
 export const PullUpDefaultProps = {
