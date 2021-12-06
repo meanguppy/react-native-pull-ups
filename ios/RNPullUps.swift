@@ -379,13 +379,13 @@ class PullUpView: UIView, RCTInvalidating {
         self.onStateChanged = onStateChanged
     }
 
-    @objc func setOverlayColor (_ color: CGColor) {
-        self.overlayColor = color.copy(alpha: self.overlayColor.alpha)
+    @objc func setOverlayColor (_ color: UIColor) {
+        self.overlayColor = color.withAlphaComponent(self.overlayColor.cgColor.alpha)
         sheetController?.overlayColor = self.overlayColor
     }
 
     @objc func setOverlayOpacity (_ opacity: NSNumber) {
-        self.overlayColor = self.overlayColor.copy(alpha: CGFloat(truncating: opacity))
+        self.overlayColor = self.overlayColor.withAlphaComponent(CGFloat(truncating: opacity))
         sheetController?.overlayColor = self.overlayColor
     }
     
