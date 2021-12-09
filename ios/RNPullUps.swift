@@ -61,7 +61,7 @@ class PullUpView: UIView, RCTInvalidating {
     var actualSizes: Array<SheetSize> = [.intrinsic, .intrinsic]
     var hideable: Bool = true
     var modal: Bool = false
-    var safeAreaBottom: CGFloat = 0
+    var useSafeArea: Bool = true
     var onStateChanged: RCTDirectEventBlock?
     /* FittedSheets props */
     var tapToDismissModal: Bool = true
@@ -229,6 +229,8 @@ class PullUpView: UIView, RCTInvalidating {
     public func updateContainerSize(){
         let container = (controller!.view as! FixedHeightView)
         let width = container.frame.width //fittedsheets container width
+        let safeAreaBottom = self.useSafeArea ? container.safeAreaIntersection : 0
+
         let bottomPad = initialBottomPad + Float(safeAreaBottom)
 
         container.intrinsicHeight = (initialHeight + safeAreaBottom)
@@ -271,8 +273,8 @@ class PullUpView: UIView, RCTInvalidating {
     @objc override func didSetProps(_ changedProps: [String]!) {
         if(!hasInitialized){ return }
         if(remountRequired){
-            sheetController!.didDismiss = nil
-            sheetController!.attemptDismiss(animated: false)
+            sheetController?.didDismiss = nil
+            sheetController?.attemptDismiss(animated: false)
             isMounted = false
             self.assignController()
             remountRequired = false
@@ -301,21 +303,23 @@ class PullUpView: UIView, RCTInvalidating {
     }
 
     private func mountSheet() {
+        if(sheetController == nil){ return }
         let rvc = self.reactViewController()!
         if(modal){
             sheetController!.resize(to: actualSizes[currentSizeIdx - 1], animated: false)
             rvc.present(sheetController!, animated: true)
         } else {
+            if(superview == nil){ return }
             sheetController!.willMove(toParent: rvc)
             rvc.addChild(sheetController!)
-            rvc.view.addSubview(sheetController!.view)
+            superview!.addSubview(sheetController!.view)
             sheetController!.didMove(toParent: rvc)
             sheetController!.view.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                sheetController!.view.topAnchor.constraint(equalTo: rvc.view.topAnchor),
-                sheetController!.view.bottomAnchor.constraint(equalTo: rvc.view.bottomAnchor),
-                sheetController!.view.leadingAnchor.constraint(equalTo: rvc.view.leadingAnchor),
-                sheetController!.view.trailingAnchor.constraint(equalTo: rvc.view.trailingAnchor)
+                sheetController!.view.topAnchor.constraint(equalTo: superview!.topAnchor),
+                sheetController!.view.bottomAnchor.constraint(equalTo: superview!.bottomAnchor),
+                sheetController!.view.leadingAnchor.constraint(equalTo: superview!.leadingAnchor),
+                sheetController!.view.trailingAnchor.constraint(equalTo: superview!.trailingAnchor)
             ])
             sheetController!.animateIn(size: actualSizes[currentSizeIdx - 1], duration: 0.3)
         }
@@ -324,7 +328,7 @@ class PullUpView: UIView, RCTInvalidating {
     }
     
     private func destroySheet() {
-        sheetController!.attemptDismiss(animated: true)
+        sheetController?.attemptDismiss(animated: true)
         self.isMounted = false
         self.notifyStateChange(idx: 0)
     }
@@ -363,15 +367,7 @@ class PullUpView: UIView, RCTInvalidating {
     }
 
     @objc func setUseSafeArea(_ useSafeArea: Bool) {
-        if(useSafeArea){
-            var window = UIApplication.shared.keyWindow
-            if #available(iOS 13.0, *) {
-                window = UIApplication.shared.windows.first
-            }
-            self.safeAreaBottom = window?.safeAreaInsets.bottom ?? 0
-        } else {
-            self.safeAreaBottom = 0
-        }
+        self.useSafeArea = useSafeArea
         if(hasInitialized){ self.updateContainerSize() }
     }
 
@@ -438,6 +434,21 @@ class PullUpView: UIView, RCTInvalidating {
             default: return
             }
         }
+    }
+}
+
+extension UIView {
+
+    var safeAreaIntersection: CGFloat {
+        let target = UIApplication.shared.keyWindow
+        let rootView = target?.rootViewController?.view
+        let globalFrame = self.superview?.convert(self.frame, to: rootView)
+        let safeAreaBottom = target?.safeAreaInsets.bottom ?? 0
+        if(target == nil || rootView == nil || globalFrame == nil){
+            return 0
+        }
+        let distFromBottom = rootView!.frame.height - globalFrame!.minY - globalFrame!.height
+        return max(0, safeAreaBottom - distFromBottom)
     }
 }
 
