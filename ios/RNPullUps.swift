@@ -40,6 +40,15 @@ class PullUpViewController: UIViewController {
             target.updateContainerSize()
             lastWidth = width
         }
+        // The first subview is our React sheet wrapper.
+        // The user's rendered content is within that wrapper. Check for a ScrollView
+        let userContent = view.subviews[safe: 0]?.subviews[safe: 0]
+        if let rctScrollView = userContent as? RCTScrollView {
+            if let nativeScrollView = rctScrollView.scrollView {
+                // Allow the SheetController to properly handle scrolling inside
+                target.sheetController?.handleScrollView(nativeScrollView)
+            }
+        }
     }
 }
 
@@ -49,7 +58,7 @@ class PullUpView: UIView, RCTInvalidating {
     public var uiManager: RCTUIManager
     var touchHandler: RCTTouchHandler
     var controller: PullUpViewController?
-    var sheetController: SheetViewController?
+    public var sheetController: SheetViewController?
     var hasInitialized: Bool = false
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
@@ -451,6 +460,13 @@ extension UIView {
         return max(0, safeAreaBottom - distFromBottom)
     }
 }
+
+extension Collection {
+    subscript (safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}
+
 
 @objc(RNPullUpView)
 class RNPullUpView: RCTViewManager {

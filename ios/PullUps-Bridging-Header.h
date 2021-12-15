@@ -12,4 +12,5 @@
 #import <React/RCTUIManagerUtils.h>
 #import <React/RCTShadowView.h>
 #import <React/RCTTouchHandler.h>
+#import <React/RCTScrollView.h>
 #import <yoga/Yoga.h>
