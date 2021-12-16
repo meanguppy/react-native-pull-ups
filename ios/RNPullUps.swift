@@ -42,9 +42,9 @@ class PullUpViewController: UIViewController {
         }
         // The first subview is our React sheet wrapper.
         // The user's rendered content is within that wrapper. Check for a ScrollView
-        let userContent = view.subviews[safe: 0]?.subviews[safe: 0]
-        if let rctScrollView = userContent as? RCTScrollView {
-            if let nativeScrollView = rctScrollView.scrollView {
+        let userContent = view.subviews[safe: 0]?.subviews
+        if let rctScrollView = userContent?.first(where: { $0 is RCTScrollView }) {
+            if let nativeScrollView = (rctScrollView as! RCTScrollView).scrollView {
                 // Allow the SheetController to properly handle scrolling inside
                 target.sheetController?.handleScrollView(nativeScrollView)
             }
