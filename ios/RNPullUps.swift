@@ -298,12 +298,12 @@ class PullUpView: UIView, RCTInvalidating {
 
             // ensure sheet is in correct state
             let targetSize = actualSizes[currentSizeIdx - 1]
-            if(sheetController!.currentSize != targetSize){
+            if(sheetController?.currentSize != targetSize){
                 // we can't differentiate between users changing the size
                 // and us resizing it.. need this flag to prevent
                 // an infinite loop of sizeChange events triggering each other
                 ignoreNextSizeChange = true
-                sheetController!.resize(to: targetSize)
+                sheetController?.resize(to: targetSize)
             }
         } else if(isMounted){
             // destroy sheet if state is hidden in modal-mode
@@ -352,6 +352,7 @@ class PullUpView: UIView, RCTInvalidating {
     @objc func setCollapsedHeight (_ collapsedHeight: NSNumber) {
         let val = CGFloat(truncating: collapsedHeight)
         self.actualSizes[0] = val > 0 ? .fixed(val) : .intrinsic
+        self.sheetController?.sizes = self.actualSizes
     }
     
     @objc func setMaxSheetWidth (_ maxSheetWidth: NSNumber) {

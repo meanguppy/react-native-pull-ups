@@ -82,7 +82,7 @@ function PullUpContent() {
 function ContentView() {
   const [state, setState] = useState<SheetState>('collapsed');
   const [useModal, setUseModal] = useState(false);
-  const [useSafeArea, setUseSafeArea] = useState(true);
+  const [useSafeArea, setUseSafeArea] = useState(false);
   const [isCollapsible, setIsCollapsible] = useState(true);
   const [isHideable, setIsHideable] = useState(true);
   const [useFooter, setUseFooter] = useState(true);
@@ -146,6 +146,11 @@ function ContentView() {
           useSafeArea={useSafeArea}
           onStateChanged={onSheetChanged}
           style={styles.sheet}
+          iosStyling={{
+            pullBarHeight: 12,
+            gripSize: { width: 50, height: 5 },
+            gripColor: '#eee',
+          }}
         >
           <PullUpContent />
         </PullUp>
