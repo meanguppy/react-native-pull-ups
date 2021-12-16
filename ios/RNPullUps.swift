@@ -70,7 +70,7 @@ class PullUpView: UIView, RCTInvalidating {
     var actualSizes: Array<SheetSize> = [.intrinsic, .intrinsic]
     var hideable: Bool = true
     var modal: Bool = false
-    var useSafeArea: Bool = true
+    var safeAreaBottom: CGFloat = 0
     var onStateChanged: RCTDirectEventBlock?
     /* FittedSheets props */
     var tapToDismissModal: Bool = true
@@ -239,8 +239,6 @@ class PullUpView: UIView, RCTInvalidating {
         guard let container = (controller?.view as? FixedHeightView) else { return }
 
         let width = container.frame.width //fittedsheets container width
-        let safeAreaBottom = self.useSafeArea ? container.safeAreaIntersection : 0
-
         let bottomPad = initialBottomPad + Float(safeAreaBottom)
 
         container.intrinsicHeight = (initialHeight + safeAreaBottom)
@@ -378,9 +376,20 @@ class PullUpView: UIView, RCTInvalidating {
     }
 
     @objc func setUseSafeArea(_ useSafeArea: Bool) {
-        self.useSafeArea = useSafeArea
+        if(useSafeArea){
+            var window: UIWindow? = nil
+            if #available(iOS 13.0, *) {
+                window = UIApplication.shared.windows.first
+            } else {
+                window = UIApplication.shared.keyWindow
+            }
+            self.safeAreaBottom = window?.safeAreaInsets.bottom ?? 0
+        } else {
+            self.safeAreaBottom = 0
+        }
         if(hasInitialized){ self.updateContainerSize() }
     }
+
 
     @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
         self.onStateChanged = onStateChanged
@@ -445,22 +454,6 @@ class PullUpView: UIView, RCTInvalidating {
             default: return
             }
         }
-    }
-}
-
-extension UIView {
-
-    var safeAreaIntersection: CGFloat {
-        guard
-            let target = UIApplication.shared.keyWindow,
-            let rootView = target.rootViewController?.view,
-            let globalFrame = self.superview?.convert(self.frame, to: rootView)
-        else {
-            return 0
-        }
-        let safeAreaBottom = target.safeAreaInsets.bottom
-        let distFromBottom = rootView.frame.height - globalFrame.minY - globalFrame.height
-        return max(0, safeAreaBottom - distFromBottom)
     }
 }
 
