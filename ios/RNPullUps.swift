@@ -42,9 +42,9 @@ class PullUpViewController: UIViewController {
         }
         // The first subview is our React sheet wrapper.
         // The user's rendered content is within that wrapper. Check for a ScrollView
-        let userContent = view.subviews[safe: 0]?.subviews[safe: 0]
-        if let rctScrollView = userContent as? RCTScrollView {
-            if let nativeScrollView = rctScrollView.scrollView {
+        let userContent = view.subviews[safe: 0]?.subviews
+        if let rctScrollView = userContent?.first(where: { $0 is RCTScrollView }) {
+            if let nativeScrollView = (rctScrollView as! RCTScrollView).scrollView {
                 // Allow the SheetController to properly handle scrolling inside
                 target.sheetController?.handleScrollView(nativeScrollView)
             }
@@ -298,12 +298,12 @@ class PullUpView: UIView, RCTInvalidating {
 
             // ensure sheet is in correct state
             let targetSize = actualSizes[currentSizeIdx - 1]
-            if(sheetController!.currentSize != targetSize){
+            if(sheetController?.currentSize != targetSize){
                 // we can't differentiate between users changing the size
                 // and us resizing it.. need this flag to prevent
                 // an infinite loop of sizeChange events triggering each other
                 ignoreNextSizeChange = true
-                sheetController!.resize(to: targetSize)
+                sheetController?.resize(to: targetSize)
             }
         } else if(isMounted){
             // destroy sheet if state is hidden in modal-mode
@@ -352,6 +352,7 @@ class PullUpView: UIView, RCTInvalidating {
     @objc func setCollapsedHeight (_ collapsedHeight: NSNumber) {
         let val = CGFloat(truncating: collapsedHeight)
         self.actualSizes[0] = val > 0 ? .fixed(val) : .intrinsic
+        self.sheetController?.sizes = self.actualSizes
     }
     
     @objc func setMaxSheetWidth (_ maxSheetWidth: NSNumber) {
