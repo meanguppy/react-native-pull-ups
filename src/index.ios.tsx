@@ -74,8 +74,7 @@ const PullUp = (props: PullUpProps) => {
 
   const onNativeStateChanged = useCallback(
     (evt: NativeSyntheticEvent<{ state: SheetState }>) => {
-      const { state: newState } = evt.nativeEvent;
-      onStateChanged?.(newState);
+      onStateChanged?.(evt.nativeEvent.state);
     },
     [onStateChanged]
   );

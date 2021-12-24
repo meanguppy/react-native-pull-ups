@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   HostComponent,
-  NativeEventEmitter,
+  NativeSyntheticEvent,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
@@ -24,6 +24,7 @@ interface NativeProps extends ViewProps {
   collapsedHeight?: number;
   maxSheetWidth?: number;
   hideable?: boolean;
+  onStateChanged: (evt: NativeSyntheticEvent<{ state: SheetState }>) => void;
 }
 
 const NativePullUp: HostComponent<NativeProps> = requireNativeComponent(
@@ -59,16 +60,12 @@ const PullUpBase = (props: PullUpProps) => {
     children,
   } = props;
 
-  useEffect(() => {
-    const eventEmitter = new NativeEventEmitter();
-    const subscription = eventEmitter.addListener(
-      'BottomSheetStateChange',
-      (event) => {
-        onStateChanged?.(event);
-      }
-    );
-    return () => subscription.remove();
-  }, [onStateChanged]);
+  const onNativeStateChanged = useCallback(
+    (evt: NativeSyntheticEvent<{ state: SheetState }>) => {
+      onStateChanged?.(evt.nativeEvent.state);
+    },
+    [onStateChanged]
+  );
 
   const maxWidthStyle =
     typeof maxSheetWidth === 'number' && maxSheetWidth > 0
@@ -81,6 +78,7 @@ const PullUpBase = (props: PullUpProps) => {
       style={styles.primary}
       collapsedHeight={collapsedHeight || 0}
       maxSheetWidth={maxSheetWidth || 0}
+      onStateChanged={onNativeStateChanged}
     >
       <View collapsable={false} style={[styles.sheet, style, maxWidthStyle]}>
         {children}
