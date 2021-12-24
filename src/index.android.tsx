@@ -158,9 +158,13 @@ class PullUpModal extends React.Component<PullUpProps> {
   };
 
   _interceptOnStateChanged = (newState: SheetState) => {
+    const { animating } = this.state;
     const { onStateChanged } = this.props;
     if (newState === 'hidden') {
-      this._animateOut();
+      if (animating === 'in') return;
+      if (!animating) {
+        this._animateOut();
+      }
     }
     onStateChanged?.(newState);
   };
