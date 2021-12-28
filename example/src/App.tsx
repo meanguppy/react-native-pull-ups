@@ -17,19 +17,35 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  layout: {
+  break: {
+    height: 1,
+    backgroundColor: '#ccc',
+    marginVertical: 12,
+    marginHorizontal: 24,
+  },
+  content: {
+    height: 240,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  header: {
+    flex: 1,
+    padding: 12,
+    alignItems: 'center',
+  },
+  buttons: {
+    height: 60,
+    paddingVertical: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'stretch',
   },
-  content: {
-    height: 200,
-    paddingHorizontal: 16,
-    paddingVertical: 32,
+  button: {
+    flex: 1,
+    backgroundColor: 'white',
+    marginHorizontal: 6,
   },
   footer: {
-    bottom: 0,
-    height: 64,
     padding: 12,
     backgroundColor: 'orange',
   },
@@ -40,27 +56,36 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     borderTopLeftRadius: 24,
   },
-  button1: { flex: 1, backgroundColor: '#0ff' },
-  button2: { flex: 1, backgroundColor: '#0f0' },
-  button3: { flex: 1, backgroundColor: '#00f' },
-  button4: { flex: 1, backgroundColor: '#ff0' },
 });
 
 function PullUpContent() {
   return (
-    <View style={[styles.layout, styles.content]}>
-      <TouchableOpacity style={styles.button1} />
-      <TouchableOpacity style={styles.button2} />
-      <TouchableOpacity style={styles.button3} />
-      <TouchableOpacity style={styles.button4} />
-    </View>
+    <>
+      <View style={styles.header}>
+        <Text>Drag me</Text>
+      </View>
+      <ScrollView style={styles.content}>
+        {new Array(20).fill('').map((_, i) => (
+          <Text key={i}>Content {i}</Text>
+        ))}
+        <View style={styles.buttons}>
+          <TouchableOpacity style={styles.button} />
+          <TouchableOpacity style={styles.button} />
+          <TouchableOpacity style={styles.button} />
+          <TouchableOpacity style={styles.button} />
+        </View>
+      </ScrollView>
+    </>
   );
 }
 
 function ContentView() {
   const [state, setState] = useState<SheetState>('collapsed');
   const [useModal, setUseModal] = useState(false);
-  const [useSafeArea, setUseSafeArea] = useState(true);
+  const [useSafeArea, setUseSafeArea] = useState(false);
+  const [isCollapsible, setIsCollapsible] = useState(true);
+  const [isHideable, setIsHideable] = useState(true);
+  const [useFooter, setUseFooter] = useState(true);
 
   const onSheetChanged = useCallback((newState: SheetState) => {
     console.log('State changed:', newState);
@@ -82,39 +107,59 @@ function ContentView() {
 
   return (
     <View style={styles.flex}>
-      <ScrollView>
-        <Button title="Hidden" onPress={() => setState('hidden')} />
-        <Button title="Collapsed" onPress={() => setState('collapsed')} />
-        <Button title="Expanded" onPress={() => setState('expanded')} />
-        <Button title={`Modal mode: ${useModal}`} onPress={toggleModalMode} />
-        {Platform.OS === 'ios' && (
+      <View style={styles.flex}>
+        <ScrollView>
+          <Button title="Hidden" onPress={() => setState('hidden')} />
+          <Button title="Collapsed" onPress={() => setState('collapsed')} />
+          <Button title="Expanded" onPress={() => setState('expanded')} />
+          <View style={styles.break} />
           <Button
-            title={`Use SafeArea: ${useSafeArea}`}
-            onPress={() => setUseSafeArea(!useSafeArea)}
+            title={`Collapsible: ${isCollapsible}`}
+            onPress={() => setIsCollapsible(!isCollapsible)}
           />
-        )}
-        {new Array(100).fill('').map((_, i) => (
-          <Text key={i}>Background {i}</Text>
-        ))}
-      </ScrollView>
-      <View style={[styles.layout, styles.footer]}>
-        <Text>Footer</Text>
+          <Button
+            title={`Hideable: ${isHideable}`}
+            onPress={() => setIsHideable(!isHideable)}
+          />
+          <Button title={`Modal mode: ${useModal}`} onPress={toggleModalMode} />
+          <Button
+            title={`Show footer: ${useFooter}`}
+            onPress={() => setUseFooter(!useFooter)}
+          />
+          {Platform.OS === 'ios' && (
+            <Button
+              title={`Use SafeArea: ${useSafeArea}`}
+              onPress={() => setUseSafeArea(!useSafeArea)}
+            />
+          )}
+          {new Array(50).fill('').map((_, i) => (
+            <Text key={i}>Background {i}</Text>
+          ))}
+        </ScrollView>
+        <PullUp
+          state={state}
+          collapsedHeight={isCollapsible ? 120 : undefined}
+          modal={useModal}
+          hideable={isHideable}
+          dismissable={true}
+          tapToDismissModal={true}
+          useSafeArea={useSafeArea}
+          onStateChanged={onSheetChanged}
+          style={styles.sheet}
+          iosStyling={{
+            pullBarHeight: 12,
+            gripSize: { width: 50, height: 5 },
+            gripColor: '#eee',
+          }}
+        >
+          <PullUpContent />
+        </PullUp>
       </View>
-      <PullUp
-        state={state}
-        collapsedHeight={120}
-        //maxSheetWidth={360}
-        modal={useModal}
-        hideable={true}
-        dismissable={true}
-        tapToDismissModal={true}
-        useSafeArea={useSafeArea}
-        onStateChanged={onSheetChanged}
-        iosStyling={{ overlayColor: 'rgba(0,0,0,0.5)' }}
-        style={styles.sheet}
-      >
-        <PullUpContent />
-      </PullUp>
+      {useFooter && (
+        <View style={styles.footer}>
+          <Text>Footer</Text>
+        </View>
+      )}
     </View>
   );
 }

@@ -40,16 +40,25 @@ class PullUpViewController: UIViewController {
             target.updateContainerSize()
             lastWidth = width
         }
+        // The first subview is our React sheet wrapper.
+        // The user's rendered content is within that wrapper. Check for a ScrollView
+        let userContent = view.subviews[safe: 0]?.subviews
+        if let rctScrollView = userContent?.first(where: { $0 is RCTScrollView }) {
+            if let nativeScrollView = (rctScrollView as! RCTScrollView).scrollView {
+                // Allow the SheetController to properly handle scrolling inside
+                target.sheetController?.handleScrollView(nativeScrollView)
+            }
+        }
     }
 }
 
 @objc(PullUpView)
 class PullUpView: UIView, RCTInvalidating {
     /* Internal state */
-    public var uiManager: RCTUIManager
-    var touchHandler: RCTTouchHandler
+    public private(set) var sheetController: SheetViewController?
     var controller: PullUpViewController?
-    var sheetController: SheetViewController?
+    var uiManager: RCTUIManager
+    var touchHandler: RCTTouchHandler
     var hasInitialized: Bool = false
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
@@ -227,7 +236,8 @@ class PullUpView: UIView, RCTInvalidating {
     }
 
     public func updateContainerSize(){
-        let container = (controller!.view as! FixedHeightView)
+        guard let container = (controller?.view as? FixedHeightView) else { return }
+
         let width = container.frame.width //fittedsheets container width
         let bottomPad = initialBottomPad + Float(safeAreaBottom)
 
@@ -237,11 +247,12 @@ class PullUpView: UIView, RCTInvalidating {
         if(container.subviews.count == 0){ return }
         let child = container.subviews[0]
         RCTExecuteOnUIManagerQueue {
-            let ygnode = self.uiManager.shadowView(forReactTag: child.reactTag)?.yogaNode
-            if(ygnode == nil){ return }
-            YGNodeStyleSetWidth(ygnode, Float(width))
-            YGNodeStyleSetPadding(ygnode, YGEdge.bottom, bottomPad)
-            self.uiManager.setNeedsLayout()
+            let shadow = self.uiManager.shadowView(forReactTag: child.reactTag)
+            if let ygnode = shadow?.yogaNode {
+                YGNodeStyleSetWidth(ygnode, Float(width))
+                YGNodeStyleSetPadding(ygnode, YGEdge.bottom, bottomPad)
+                self.uiManager.setNeedsLayout()
+            }
         }
     }
     
@@ -251,14 +262,14 @@ class PullUpView: UIView, RCTInvalidating {
         // check our sheet view for existing padding
         // we will add safe area padding onto it, if necessary
         RCTExecuteOnUIManagerQueue {
-            let shadow = self.uiManager.shadowView(forReactTag: subview.reactTag)
-            if(shadow == nil){ return }
-            self.initialBottomPad = [
-                0,
-                shadow!.padding.value,
-                shadow!.paddingVertical.value,
-                shadow!.paddingBottom.value
-            ].max() ?? 0
+            if let shadow = self.uiManager.shadowView(forReactTag: subview.reactTag) {
+                self.initialBottomPad = [
+                    0,
+                    shadow.padding.value,
+                    shadow.paddingVertical.value,
+                    shadow.paddingBottom.value
+                ].max() ?? 0
+            }
         }
     }
     
@@ -271,8 +282,8 @@ class PullUpView: UIView, RCTInvalidating {
     @objc override func didSetProps(_ changedProps: [String]!) {
         if(!hasInitialized){ return }
         if(remountRequired){
-            sheetController!.didDismiss = nil
-            sheetController!.attemptDismiss(animated: false)
+            sheetController?.didDismiss = nil
+            sheetController?.attemptDismiss(animated: false)
             isMounted = false
             self.assignController()
             remountRequired = false
@@ -287,12 +298,12 @@ class PullUpView: UIView, RCTInvalidating {
 
             // ensure sheet is in correct state
             let targetSize = actualSizes[currentSizeIdx - 1]
-            if(sheetController!.currentSize != targetSize){
+            if(sheetController?.currentSize != targetSize){
                 // we can't differentiate between users changing the size
                 // and us resizing it.. need this flag to prevent
                 // an infinite loop of sizeChange events triggering each other
                 ignoreNextSizeChange = true
-                sheetController!.resize(to: targetSize)
+                sheetController?.resize(to: targetSize)
             }
         } else if(isMounted){
             // destroy sheet if state is hidden in modal-mode
@@ -301,30 +312,32 @@ class PullUpView: UIView, RCTInvalidating {
     }
 
     private func mountSheet() {
-        let rvc = self.reactViewController()!
+        guard let sheetController = self.sheetController else { return }
+        guard let rvc = self.reactViewController() else { return }
         if(modal){
-            sheetController!.resize(to: actualSizes[currentSizeIdx - 1], animated: false)
-            rvc.present(sheetController!, animated: true)
+            sheetController.resize(to: actualSizes[currentSizeIdx - 1], animated: false)
+            rvc.present(sheetController, animated: true)
         } else {
-            sheetController!.willMove(toParent: rvc)
-            rvc.addChild(sheetController!)
-            rvc.view.addSubview(sheetController!.view)
-            sheetController!.didMove(toParent: rvc)
-            sheetController!.view.translatesAutoresizingMaskIntoConstraints = false
+            guard let superview = self.superview else { return }
+            sheetController.willMove(toParent: rvc)
+            rvc.addChild(sheetController)
+            superview.addSubview(sheetController.view)
+            sheetController.didMove(toParent: rvc)
+            sheetController.view.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                sheetController!.view.topAnchor.constraint(equalTo: rvc.view.topAnchor),
-                sheetController!.view.bottomAnchor.constraint(equalTo: rvc.view.bottomAnchor),
-                sheetController!.view.leadingAnchor.constraint(equalTo: rvc.view.leadingAnchor),
-                sheetController!.view.trailingAnchor.constraint(equalTo: rvc.view.trailingAnchor)
+                sheetController.view.topAnchor.constraint(equalTo: superview.topAnchor),
+                sheetController.view.bottomAnchor.constraint(equalTo: superview.bottomAnchor),
+                sheetController.view.leadingAnchor.constraint(equalTo: superview.leadingAnchor),
+                sheetController.view.trailingAnchor.constraint(equalTo: superview.trailingAnchor)
             ])
-            sheetController!.animateIn(size: actualSizes[currentSizeIdx - 1], duration: 0.3)
+            sheetController.animateIn(size: actualSizes[currentSizeIdx - 1], duration: 0.3)
         }
         self.isMounted = true
         self.notifyStateChange(idx: currentSizeIdx)
     }
     
     private func destroySheet() {
-        sheetController!.attemptDismiss(animated: true)
+        sheetController?.attemptDismiss(animated: true)
         self.isMounted = false
         self.notifyStateChange(idx: 0)
     }
@@ -339,6 +352,7 @@ class PullUpView: UIView, RCTInvalidating {
     @objc func setCollapsedHeight (_ collapsedHeight: NSNumber) {
         let val = CGFloat(truncating: collapsedHeight)
         self.actualSizes[0] = val > 0 ? .fixed(val) : .intrinsic
+        self.sheetController?.sizes = self.actualSizes
     }
     
     @objc func setMaxSheetWidth (_ maxSheetWidth: NSNumber) {
@@ -364,9 +378,11 @@ class PullUpView: UIView, RCTInvalidating {
 
     @objc func setUseSafeArea(_ useSafeArea: Bool) {
         if(useSafeArea){
-            var window = UIApplication.shared.keyWindow
+            var window: UIWindow? = nil
             if #available(iOS 13.0, *) {
                 window = UIApplication.shared.windows.first
+            } else {
+                window = UIApplication.shared.keyWindow
             }
             self.safeAreaBottom = window?.safeAreaInsets.bottom ?? 0
         } else {
@@ -374,6 +390,7 @@ class PullUpView: UIView, RCTInvalidating {
         }
         if(hasInitialized){ self.updateContainerSize() }
     }
+
 
     @objc func setOnStateChanged (_ onStateChanged: @escaping RCTBubblingEventBlock) {
         self.onStateChanged = onStateChanged
@@ -438,6 +455,12 @@ class PullUpView: UIView, RCTInvalidating {
             default: return
             }
         }
+    }
+}
+
+extension Collection {
+    subscript (safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 }
 

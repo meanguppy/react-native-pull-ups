@@ -1,29 +1,25 @@
 package com.reactnativepullups
 
+import android.content.Context
+import android.util.AttributeSet
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import com.facebook.react.bridge.*
-import com.facebook.react.common.MapBuilder
-import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.PixelUtil
+import com.facebook.react.uimanager.PointerEvents
+import com.facebook.react.uimanager.ReactPointerEventsView
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.ViewGroupManager
-import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 
-@Suppress("UNUSED_PARAMETER")
-class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
+class PullUpView : CoordinatorLayout, ReactPointerEventsView {
 
-  override fun getName() = "RNPullUpView"
-  
-  private lateinit var context: ThemedReactContext
-  private lateinit var contents: RelativeLayout
-  private lateinit var behavior: BottomSheetBehavior<*>
-  private var state: BottomSheetState = BottomSheetState.COLLAPSED
+  constructor(context: Context) : super(context)
+  constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
+  constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
   enum class BottomSheetState(val str: String, val nativeState: Int){
     EXPANDED("expanded", BottomSheetBehavior.STATE_EXPANDED),
@@ -31,10 +27,15 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     HIDDEN("hidden", BottomSheetBehavior.STATE_HIDDEN);
   }
 
-  override fun createViewInstance(reactContext: ThemedReactContext): CoordinatorLayout {
-    context = reactContext
-    var view = LayoutInflater.from(reactContext).inflate(R.layout.bottom_sheet, null) as CoordinatorLayout
-    contents = view.findViewById(R.id.contents) as RelativeLayout
+  private var state: BottomSheetState = BottomSheetState.COLLAPSED
+  lateinit var contents: RelativeLayout
+    private set
+  lateinit var behavior: BottomSheetBehavior<*>
+    private set
+
+  override fun onViewAdded(child: View){
+    super.onViewAdded(child)
+    contents = child as RelativeLayout
     behavior = BottomSheetBehavior.from(contents).apply {
       addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
         override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
@@ -50,16 +51,13 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
       setSkipCollapsed(true)
       setPeekHeight(Integer.MAX_VALUE)
     }
-    return view
   }
 
-  @ReactProp(name = "hideable")
-  fun setHideable(parent: CoordinatorLayout, hideable: Boolean){
+  fun setHideable(hideable: Boolean){
     behavior.setHideable(hideable)
   }
 
-  @ReactProp(name = "collapsedHeight")
-  fun setCollapsedHeight(parent: CoordinatorLayout, height: Double){
+  fun setCollapsedHeight(height: Double){
     var isValidHeight = (height > 0.0)
     behavior.setSkipCollapsed(!isValidHeight)
     behavior.setPeekHeight(
@@ -68,8 +66,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     )
   }
 
-  @ReactProp(name = "state")
-  fun setSheetState(parent: CoordinatorLayout, stateStr: String?) {
+  fun setSheetState(stateStr: String?) {
     matchState(stateStr!!)?.let {
       if(behavior.state != it.nativeState){
         // We want to allow hiding programmatically, even if
@@ -84,8 +81,7 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     }
   }
 
-  @ReactProp(name = "maxSheetWidth")
-  fun setMaxWidth(parent: CoordinatorLayout, maxWidth: Double){
+  fun setMaxWidth(maxWidth: Double){
     behavior.setMaxWidth(
       if(maxWidth <= 0.0) -1
       else PixelUtil.toPixelFromDIP(maxWidth).toInt()
@@ -109,26 +105,16 @@ class PullUpsViewManager : ViewGroupManager<CoordinatorLayout>() {
     newState?.let {
       if(state == newState) return
       state = newState
-      context
-        .getJSModule(RCTDeviceEventEmitter::class.java)
-        .emit("BottomSheetStateChange", state.str)
+
+      val args = Arguments.createMap()
+      args.putString("state", newState.str)
+      (context as ThemedReactContext)
+        .getJSModule(RCTEventEmitter::class.java)
+        .receiveEvent(id, "onStateChanged", args)
     }
   }
 
-  /* Override ViewGroupManager funcs to handle child views properly */
-  override fun addView(parent: CoordinatorLayout?, child: View?, index: Int)
-    = contents.addView(child, index)
-
-  override fun removeAllViews(parent: CoordinatorLayout)
-    = contents.removeAllViews()
-
-  override fun removeViewAt(parent: CoordinatorLayout, index: Int)
-    = contents.removeViewAt(index)
-
-  override fun getChildAt(parent: CoordinatorLayout, index: Int)
-    = contents.getChildAt(index)
-
-  override fun getChildCount(parent: CoordinatorLayout)
-    = contents.childCount
+  /* Allow React-Native touch events to pass through wrapping container */
+  override fun getPointerEvents() = PointerEvents.BOX_NONE
 
 }
