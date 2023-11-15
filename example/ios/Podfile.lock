@@ -186,7 +186,7 @@ PODS:
     - React-cxxreact (= 0.63.4)
     - React-jsi (= 0.63.4)
   - React-jsinspector (0.63.4)
-  - react-native-pull-ups (0.1.0-alpha.1):
+  - react-native-pull-ups (1.2.1):
     - FittedSheets
     - React-Core
   - react-native-safe-area-context (3.3.2):
@@ -414,7 +414,7 @@ SPEC CHECKSUMS:
   React-jsi: a0418934cf48f25b485631deb27c64dc40fb4c31
   React-jsiexecutor: 93bd528844ad21dc07aab1c67cb10abae6df6949
   React-jsinspector: 58aef7155bc9a9683f5b60b35eccea8722a4f53a
-  react-native-pull-ups: c38dd135d324eb38a4f4d7b909ef1dcb0032ff6d
+  react-native-pull-ups: 90aabd005b737ff9bc207050e35a08aff5e2703a
   react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
   React-RCTActionSheet: 89a0ca9f4a06c1f93c26067af074ccdce0f40336
   React-RCTAnimation: 1bde3ecc0c104c55df246eda516e0deb03c4e49b
@@ -434,4 +434,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 9450d16b49a92657dca9bfb09090c93f75a56da6
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.14.2
