@@ -9,9 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import PullUp, { SheetState } from 'react-native-pull-ups';
-import { createAppContainer } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
+import PullUp, { type SheetState } from 'react-native-pull-ups';
 
 const styles = StyleSheet.create({
   flex: {
@@ -164,11 +162,6 @@ function ContentView() {
   );
 }
 
-const AppNavigator = createStackNavigator({
-  Home: { screen: ContentView },
-});
-const AppContainer = createAppContainer(AppNavigator);
-
 export default function App() {
-  return <AppContainer />;
+  return <ContentView />;
 }
