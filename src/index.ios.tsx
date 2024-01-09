@@ -1,20 +1,20 @@
 import React, { useCallback } from 'react';
 import {
-  HostComponent,
-  NativeSyntheticEvent,
   StyleSheet,
   View,
-  ViewProps,
   processColor,
   requireNativeComponent,
-  ColorValue,
+  type ColorValue,
+  type HostComponent,
+  type NativeSyntheticEvent,
+  type ViewProps,
 } from 'react-native';
 import {
-  PullUpProps,
-  SheetState,
-  IOSStyling,
   PullUpPropTypes,
   PullUpDefaultProps,
+  type IOSStyling,
+  type PullUpProps,
+  type SheetState,
 } from './types';
 
 /* Props for Native iOS component.
@@ -104,4 +104,4 @@ PullUp.propTypes = PullUpPropTypes;
 PullUp.defaultProps = PullUpDefaultProps;
 
 export default PullUp;
-export { PullUpProps, SheetState };
+export type { PullUpProps, SheetState };

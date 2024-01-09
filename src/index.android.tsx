@@ -1,20 +1,20 @@
 import React, { useCallback } from 'react';
 import {
-  HostComponent,
-  NativeSyntheticEvent,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
-  ViewProps,
   requireNativeComponent,
   Modal,
   Animated,
+  type HostComponent,
+  type NativeSyntheticEvent,
+  type ViewProps,
 } from 'react-native';
 import {
-  PullUpProps,
-  SheetState,
   PullUpPropTypes,
   PullUpDefaultProps,
+  type PullUpProps,
+  type SheetState,
 } from './types';
 
 /* Props for Native Android component.
@@ -201,4 +201,4 @@ PullUp.propTypes = PullUpPropTypes;
 PullUp.defaultProps = PullUpDefaultProps;
 
 export default PullUp;
-export { PullUpProps, SheetState };
+export type { PullUpProps, SheetState };
