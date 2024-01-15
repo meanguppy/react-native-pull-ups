@@ -2,8 +2,6 @@
   "name": "react-native-pull-ups",
   "version": "1.4.0",
   "description": "Native Bottom Sheet Implementations for iOS and Android. Toddler approved.",
-  "main": "lib/commonjs/index",
-  "module": "lib/module/index",
   "types": "src/index.d.ts",
   "react-native": "src/index",
   "source": "src/index",
