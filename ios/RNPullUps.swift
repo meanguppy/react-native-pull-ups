@@ -36,7 +36,7 @@ class PullUpViewController: UIViewController {
     override func viewDidLayoutSubviews(){
         super.viewDidLayoutSubviews()
         let width = view.frame.width
-        if(lastWidth != width){
+        if lastWidth != width {
             target.updateContainerSize()
             lastWidth = width
         }
@@ -63,7 +63,6 @@ class PullUpView: UIView, RCTInvalidating {
     var isMounted: Bool = false
     var ignoreNextSizeChange: Bool = false
     var remountRequired: Bool = false
-    var initialHeight: CGFloat = 0
     var initialBottomPad: Float = 0
     /* Internal props */
     var currentSizeIdx: Int = 0 //via `state` prop
@@ -105,13 +104,13 @@ class PullUpView: UIView, RCTInvalidating {
 
     override func layoutSubviews(){
         super.layoutSubviews()
-
-        if(self.hasInitialized){ return }
-        self.hasInitialized = true
-        self.remountRequired = false
-        self.initialHeight = bounds.height //height of react component
-        self.assignController()
-        self.syncSheetState()
+        updateContainerSize()
+        if !self.hasInitialized {
+          self.hasInitialized = true
+          self.remountRequired = false
+          self.assignController()
+          self.syncSheetState()
+        }
     }
     
     private func assignController () {
@@ -237,15 +236,14 @@ class PullUpView: UIView, RCTInvalidating {
 
     public func updateContainerSize(){
         guard let container = (controller?.view as? FixedHeightView) else { return }
-
-        let width = container.frame.width //fittedsheets container width
-        let bottomPad = initialBottomPad + Float(safeAreaBottom)
-
-        container.intrinsicHeight = (initialHeight + safeAreaBottom)
+        container.intrinsicHeight = bounds.height // on first pass, does not include changes below
         sheetController?.updateIntrinsicHeight()
-
-        if(container.subviews.count == 0){ return }
+        
+        if container.subviews.count == 0 { return }
+        let bottomPad = initialBottomPad + Float(safeAreaBottom)
+        let width = container.frame.width // fittedsheets container width
         let child = container.subviews[0]
+        
         RCTExecuteOnUIManagerQueue {
             let shadow = self.uiManager.shadowView(forReactTag: child.reactTag)
             if let ygnode = shadow?.yogaNode {
@@ -377,7 +375,7 @@ class PullUpView: UIView, RCTInvalidating {
     }
 
     @objc func setUseSafeArea(_ useSafeArea: Bool) {
-        if(useSafeArea){
+        if useSafeArea {
             var window: UIWindow? = nil
             if #available(iOS 13.0, *) {
                 window = UIApplication.shared.windows.first
@@ -388,7 +386,9 @@ class PullUpView: UIView, RCTInvalidating {
         } else {
             self.safeAreaBottom = 0
         }
-        if(hasInitialized){ self.updateContainerSize() }
+        if hasInitialized {
+          self.updateContainerSize()
+        }
     }
 
 
