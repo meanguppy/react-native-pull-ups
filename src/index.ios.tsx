@@ -50,12 +50,29 @@ const styles = StyleSheet.create({
   },
 });
 
+function extractIosStyling(style: ViewProps['style']): IOSStyling {
+  const {
+    borderRadius,
+    borderTopLeftRadius,
+    borderTopRightRadius,
+    backgroundColor,
+  } = StyleSheet.flatten(style);
+  const cornerRadius = borderTopLeftRadius ?? borderTopRightRadius ?? borderRadius ?? 0;
+  if (typeof cornerRadius !== 'number') throw Error('Border radius must be of type number');
+  return {
+    cornerRadius,
+    contentBackgroundColor: backgroundColor ?? 'transparent',
+  };
+}
+
 function processColors(config: IOSStyling) {
-  for (const [k, v] of Object.entries(config)) {
-    if (typeof v === 'string') {
-      config[k as keyof IOSStyling] = processColor(v) as any;
-    }
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(config)) {
+    result[key] = key.endsWith('Color')
+      ? processColor(val as ColorValue)
+      : val;
   }
+  return result;
 }
 
 const PullUp = (props: PullUpProps) => {
@@ -79,21 +96,24 @@ const PullUp = (props: PullUpProps) => {
     [onStateChanged]
   );
 
-  //TODO: properly handle dismounting in modal mode
-  //const mountChildren = !modal || state !== 'hidden';
-  if (iosStyling) processColors(iosStyling);
+  const finalStyle = [styles.sheet, style];
+  const finalIosStyling = processColors({
+    ...extractIosStyling(finalStyle),
+    ...iosStyling,
+  });
 
   return (
     <NativePullUp
       {...props}
       style={styles.primary}
+      iosStyling={finalIosStyling}
       collapsedHeight={collapsedHeight || 0}
       maxSheetWidth={maxSheetWidth || 0}
       hideable={hideable && (!modal || dismissable)}
       tapToDismissModal={dismissable && tapToDismissModal}
       onStateChanged={onNativeStateChanged}
     >
-      <View collapsable={false} style={[styles.sheet, style]}>
+      <View collapsable={false} style={finalStyle}>
         {children}
       </View>
     </NativePullUp>
