@@ -945,7 +945,7 @@ PODS:
   - React-Mapbuffer (0.73.2):
     - glog
     - React-debug
-  - react-native-pull-ups (0.1.0):
+  - react-native-pull-ups (1.5.0):
     - FittedSheets
     - glog
     - RCT-Folly (= 2022.05.16.00)
@@ -1355,7 +1355,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 03644c063fc3621c9a4e8bf263a8150909129618
   React-logger: 66b168e2b2bee57bd8ce9e69f739d805732a5570
   React-Mapbuffer: 9ee041e1d7be96da6d76a251f92e72b711c651d6
-  react-native-pull-ups: d41d8cceae04c567be21de2dd1149da37b9abf8e
+  react-native-pull-ups: fac45291ede0c6f48406dba1dc5b530230a568c9
   React-nativeconfig: d753fbbc8cecc8ae413d615599ac378bbf6999bb
   React-NativeModulesApple: 964f4eeab1b4325e8b6a799cf4444c3fd4eb0a9c
   React-perflogger: 29efe63b7ef5fbaaa50ef6eaa92482f98a24b97e
@@ -1381,4 +1381,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 730ee3d7979a127c174d2202f471ea1fae6b4dbd
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.13.0
