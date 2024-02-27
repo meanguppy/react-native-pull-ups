@@ -226,24 +226,21 @@ class PullUpView: UIView, RCTInvalidating {
     }
 
     private func notifyStateChange(idx: Int) {
-        let didChange = (self.currentSizeIdx != idx)
-        if(didChange){
-            self.currentSizeIdx = idx
-            let newState = ["hidden","collapsed","expanded"][idx]
-            self.onStateChanged?(["state": newState])
-        }
+        self.currentSizeIdx = idx
+        let newState = ["hidden","collapsed","expanded"][idx]
+        self.onStateChanged?(["state": newState])
     }
 
     public func updateContainerSize(){
         guard let container = (controller?.view as? FixedHeightView) else { return }
         container.intrinsicHeight = bounds.height // on first pass, does not include changes below
         sheetController?.updateIntrinsicHeight()
-        
+
         if container.subviews.count == 0 { return }
         let bottomPad = initialBottomPad + Float(safeAreaBottom)
         let width = container.frame.width // fittedsheets container width
         let child = container.subviews[0]
-        
+
         RCTExecuteOnUIManagerQueue {
             let shadow = self.uiManager.shadowView(forReactTag: child.reactTag)
             if let ygnode = shadow?.yogaNode {
@@ -253,7 +250,7 @@ class PullUpView: UIView, RCTInvalidating {
             }
         }
     }
-    
+
     override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
         self.controller!.view.addSubview(subview)
         touchHandler.attach(to: subview)
@@ -270,7 +267,7 @@ class PullUpView: UIView, RCTInvalidating {
             }
         }
     }
-    
+
     override func removeReactSubview(_ subview: UIView!) {
         super.removeReactSubview(subview)
         subview.removeFromSuperview()
@@ -288,7 +285,7 @@ class PullUpView: UIView, RCTInvalidating {
         }
         self.syncSheetState()
     }
-    
+
     private func syncSheetState() {
         let shouldBeMounted = (currentSizeIdx > 0)
         if(shouldBeMounted){
@@ -333,11 +330,10 @@ class PullUpView: UIView, RCTInvalidating {
         self.isMounted = true
         self.notifyStateChange(idx: currentSizeIdx)
     }
-    
+
     private func destroySheet() {
         sheetController?.attemptDismiss(animated: true)
         self.isMounted = false
-        self.notifyStateChange(idx: 0)
     }
 
     /* Prop setters */
