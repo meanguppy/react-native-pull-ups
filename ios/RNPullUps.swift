@@ -222,7 +222,9 @@ class PullUpView: UIView, RCTInvalidating {
         sheetController?.sizeChanged = nil
         sheetController?.didDismiss = nil
         self.onStateChanged = nil
-        destroySheet()
+        dismissSheet()
+        self.sheetController = nil
+        self.controller = nil
     }
 
     private func notifyStateChange(idx: Int) {
@@ -293,7 +295,6 @@ class PullUpView: UIView, RCTInvalidating {
         let shouldBeMounted = (currentSizeIdx > 0)
         if(shouldBeMounted){
             if(!isMounted){ mountSheet() }
-
             // ensure sheet is in correct state
             let targetSize = actualSizes[currentSizeIdx - 1]
             if(sheetController?.currentSize != targetSize){
@@ -304,8 +305,7 @@ class PullUpView: UIView, RCTInvalidating {
                 sheetController?.resize(to: targetSize)
             }
         } else if(isMounted){
-            // destroy sheet if state is hidden in modal-mode
-            destroySheet()
+            dismissSheet()
         }
     }
 
@@ -334,7 +334,7 @@ class PullUpView: UIView, RCTInvalidating {
         self.notifyStateChange(idx: currentSizeIdx)
     }
     
-    private func destroySheet() {
+    private func dismissSheet() {
         sheetController?.attemptDismiss(animated: true)
         self.isMounted = false
         self.notifyStateChange(idx: 0)
