@@ -1,6 +1,6 @@
 {
   "name": "react-native-pull-ups",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Native Bottom Sheet Implementations for iOS and Android. Toddler approved.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -50,13 +50,13 @@
     "modal",
     "dialog"
   ],
-  "repository": "https://github.com/thessler27/react-native-pull-ups",
-  "author": "Thomas Hessler <hessler.thomas93@gmail.com> (https://github.com/thessler27)",
+  "repository": "https://github.com/meanguppy/react-native-pull-ups",
+  "author": "Joel Nuesch <joel@meanguppy.com> (https://github.com/cboar)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/thessler27/react-native-pull-ups/issues"
+    "url": "https://github.com/meanguppy/react-native-pull-ups/issues"
   },
-  "homepage": "https://github.com/thessler27/react-native-pull-ups#readme",
+  "homepage": "https://github.com/meanguppy/react-native-pull-ups#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -112,7 +112,7 @@
       "publish": true
     },
     "github": {
-      "release": false
+      "release": true
     },
     "plugins": {
       "@release-it/conventional-changelog": {
