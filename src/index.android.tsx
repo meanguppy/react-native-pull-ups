@@ -87,10 +87,6 @@ const PullUpBase = (props: PullUpProps) => {
   );
 };
 
-const AnimatedTouchable = Animated.createAnimatedComponent(
-  TouchableWithoutFeedback
-);
-
 class PullUpModal extends React.Component<PullUpProps> {
   opacity: Animated.Value;
   state: { destroyed: boolean; animating: 'in' | 'out' | false };
@@ -177,12 +173,9 @@ class PullUpModal extends React.Component<PullUpProps> {
 
     return (
       <Modal transparent onRequestClose={this._onRequestClose}>
-        <AnimatedTouchable
-          onPress={this._onPressOverlay}
-          style={{ opacity: this.opacity }}
-        >
-          <View style={[styles.overlay, { backgroundColor: overlayColor }]} />
-        </AnimatedTouchable>
+        <TouchableWithoutFeedback onPress={this._onPressOverlay}>
+          <Animated.View style={[styles.overlay, { opacity: this.opacity, backgroundColor: overlayColor }]} />
+        </TouchableWithoutFeedback>
         <PullUpBase
           {...this.props}
           state={destroyed || animating === 'out' ? 'hidden' : state}
