@@ -1,6 +1,6 @@
 {
   "name": "react-native-pull-ups",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Native Bottom Sheet Implementations for iOS and Android. Toddler approved.",
   "types": "src/index.d.ts",
   "react-native": "src/index",
