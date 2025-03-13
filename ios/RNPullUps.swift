@@ -33,6 +33,10 @@ class PullUpViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        UIApplication.activeKeyWindow?.rootViewController?.supportedInterfaceOrientations ?? super.supportedInterfaceOrientations
+    }
+
     override func viewDidLayoutSubviews(){
         super.viewDidLayoutSubviews()
         let width = view.frame.width
@@ -376,18 +380,12 @@ class PullUpView: UIView, RCTInvalidating {
 
     @objc func setUseSafeArea(_ useSafeArea: Bool) {
         if useSafeArea {
-            var window: UIWindow? = nil
-            if #available(iOS 13.0, *) {
-                window = UIApplication.shared.windows.first
-            } else {
-                window = UIApplication.shared.keyWindow
-            }
-            self.safeAreaBottom = window?.safeAreaInsets.bottom ?? 0
+            self.safeAreaBottom = UIApplication.activeKeyWindow?.safeAreaInsets.bottom ?? 0
         } else {
             self.safeAreaBottom = 0
         }
         if hasInitialized {
-          self.updateContainerSize()
+            self.updateContainerSize()
         }
     }
 
@@ -461,6 +459,19 @@ class PullUpView: UIView, RCTInvalidating {
 extension Collection {
     subscript (safe index: Index) -> Element? {
         return indices.contains(index) ? self[index] : nil
+    }
+}
+
+extension UIApplication {
+    static var activeKeyWindow: UIWindow? {
+        let windows: [UIWindow]? = if #available(iOS 13.0, *) {
+            (UIApplication.shared.connectedScenes
+              .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+            )?.windows
+        } else {
+            UIApplication.shared.windows
+        }
+        return windows?.first(where: { $0.isKeyWindow }) ?? windows?.first
     }
 }
 

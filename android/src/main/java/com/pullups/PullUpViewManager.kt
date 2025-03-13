@@ -42,7 +42,7 @@ class PullUpViewManager : ViewGroupManager<PullUpView>() {
   }
 
   /* Override to handle child views properly */
-  override fun addView(target: PullUpView, child: View?, index: Int)
+  override fun addView(target: PullUpView, child: View, index: Int)
     = target.contents.addView(child, index)
 
   override fun removeAllViews(target: PullUpView)
