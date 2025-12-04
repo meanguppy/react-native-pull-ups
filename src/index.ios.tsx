@@ -9,12 +9,10 @@ import {
   type NativeSyntheticEvent,
   type ViewProps,
 } from 'react-native';
-import {
-  PullUpPropTypes,
-  PullUpDefaultProps,
-  type IOSStyling,
-  type PullUpProps,
-  type SheetState,
+import type {
+  IOSStyling,
+  PullUpProps,
+  SheetState,
 } from './types';
 
 /* Props for Native iOS component.
@@ -26,6 +24,7 @@ interface NativeProps extends ViewProps {
   modal?: boolean;
   hideable?: boolean;
   tapToDismissModal?: boolean;
+  useSafeArea?: boolean;
   overlayColor?: ColorValue;
   overlayOpacity?: number;
   onStateChanged: (evt: NativeSyntheticEvent<{ state: SheetState }>) => void;
@@ -77,16 +76,20 @@ function processColors(config: IOSStyling) {
 
 const PullUp = (props: PullUpProps) => {
   const {
-    collapsedHeight,
-    maxSheetWidth,
-    modal,
-    hideable,
-    dismissable,
-    tapToDismissModal,
+    collapsedHeight = 0,
+    maxSheetWidth = 0,
+    modal = false,
+    hideable = true,
+    dismissable = true,
+    tapToDismissModal = true,
+    useSafeArea = true,
+    overlayColor = 'black',
+    overlayOpacity = 0.5,
     onStateChanged,
     iosStyling,
     children,
     style,
+    ...rest
   } = props;
 
   const onNativeStateChanged = useCallback(
@@ -104,13 +107,16 @@ const PullUp = (props: PullUpProps) => {
 
   return (
     <NativePullUp
-      {...props}
-      style={styles.primary}
-      iosStyling={finalIosStyling}
-      collapsedHeight={collapsedHeight || 0}
-      maxSheetWidth={maxSheetWidth || 0}
+      {...rest}
+      collapsedHeight={collapsedHeight}
+      maxSheetWidth={maxSheetWidth}
       hideable={hideable && (!modal || dismissable)}
       tapToDismissModal={dismissable && tapToDismissModal}
+      useSafeArea={useSafeArea}
+      overlayColor={overlayColor}
+      overlayOpacity={overlayOpacity}
+      style={styles.primary}
+      iosStyling={finalIosStyling}
       onStateChanged={onNativeStateChanged}
     >
       <View collapsable={false} style={finalStyle}>
@@ -119,9 +125,6 @@ const PullUp = (props: PullUpProps) => {
     </NativePullUp>
   );
 };
-
-PullUp.propTypes = PullUpPropTypes;
-PullUp.defaultProps = PullUpDefaultProps;
 
 export default PullUp;
 export type { PullUpProps, SheetState };

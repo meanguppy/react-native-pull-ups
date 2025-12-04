@@ -10,11 +10,9 @@ import {
   type NativeSyntheticEvent,
   type ViewProps,
 } from 'react-native';
-import {
-  PullUpPropTypes,
-  PullUpDefaultProps,
-  type PullUpProps,
-  type SheetState,
+import type {
+  PullUpProps,
+  SheetState,
 } from './types';
 
 /* Props for Native Android component.
@@ -47,7 +45,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: PullUpDefaultProps.overlayColor,
+    backgroundColor: 'black',
   },
 });
 
@@ -55,9 +53,11 @@ const PullUpBase = (props: PullUpProps) => {
   const {
     collapsedHeight,
     maxSheetWidth,
+    hideable = true,
     onStateChanged,
     style,
     children,
+    ...rest
   } = props;
 
   const onNativeStateChanged = useCallback(
@@ -74,7 +74,8 @@ const PullUpBase = (props: PullUpProps) => {
 
   return (
     <NativePullUp
-      {...props}
+      {...rest}
+      hideable={hideable}
       style={styles.primary}
       collapsedHeight={collapsedHeight || 0}
       maxSheetWidth={maxSheetWidth || 0}
@@ -90,6 +91,14 @@ const PullUpBase = (props: PullUpProps) => {
 class PullUpModal extends React.Component<PullUpProps> {
   opacity: Animated.Value;
   state: { destroyed: boolean; animating: 'in' | 'out' | false };
+
+  static defaultProps = {
+    hideable: true,
+    dismissable: true,
+    tapToDismissModal: true,
+    overlayColor: 'black',
+    overlayOpacity: 0.5,
+  };
 
   constructor(props: PullUpProps) {
     super(props);
@@ -131,7 +140,7 @@ class PullUpModal extends React.Component<PullUpProps> {
     this.setState({ animating: 'in' });
     setTimeout(() => this.setState({ destroyed: false }));
     Animated.timing(this.opacity, {
-      toValue: this.props.overlayOpacity || PullUpDefaultProps.overlayOpacity,
+      toValue: this.props.overlayOpacity ?? 0.5,
       duration: 250,
       useNativeDriver: true,
     }).start(({ finished }) => {
@@ -189,9 +198,6 @@ class PullUpModal extends React.Component<PullUpProps> {
 
 const PullUp = (props: PullUpProps) =>
   props.modal ? <PullUpModal {...props} /> : <PullUpBase {...props} />;
-
-PullUp.propTypes = PullUpPropTypes;
-PullUp.defaultProps = PullUpDefaultProps;
 
 export default PullUp;
 export type { PullUpProps, SheetState };
