@@ -96,7 +96,7 @@ class PullUpView : CoordinatorLayout, ReactPointerEventsView {
   }
 
   private fun matchState(sheetState: String) = try {
-    BottomSheetState.valueOf(sheetState.toUpperCase())
+    BottomSheetState.valueOf(sheetState.uppercase())
   } catch(e: IllegalArgumentException){
     null
   }
@@ -115,6 +115,6 @@ class PullUpView : CoordinatorLayout, ReactPointerEventsView {
   }
 
   /* Allow React-Native touch events to pass through wrapping container */
-  override fun getPointerEvents() = PointerEvents.BOX_NONE
+  override val pointerEvents = PointerEvents.BOX_NONE
 
 }
