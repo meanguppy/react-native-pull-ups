@@ -110,14 +110,15 @@ const PullUp = (props: PullUpProps) => {
       {...rest}
       collapsedHeight={collapsedHeight}
       maxSheetWidth={maxSheetWidth}
+      modal={modal}
       hideable={hideable && (!modal || dismissable)}
       tapToDismissModal={dismissable && tapToDismissModal}
       useSafeArea={useSafeArea}
       overlayColor={overlayColor}
       overlayOpacity={overlayOpacity}
+      onStateChanged={onNativeStateChanged}
       style={styles.primary}
       iosStyling={finalIosStyling}
-      onStateChanged={onNativeStateChanged}
     >
       <View collapsable={false} style={finalStyle}>
         {children}
